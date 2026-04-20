@@ -43,3 +43,5 @@ htmlcov/
 
 # Internal changelog
 .changelog_internal.md
+
+.dev_notes.md

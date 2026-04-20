@@ -3,9 +3,12 @@
 # 🧠 M4STCLAW v3 — Autonomous AI Mesh Network
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
-[![MCP](https://img.shields.io/badge/MCP-Native-00E5FF?style=flat-square)](https://modelcontextprotocol.io)
+[![CI](https://github.com/m4stanuj/M4STCLAW/actions/workflows/ci.yml/badge.svg)](https://github.com/m4stanuj/M4STCLAW/actions)
+[![Release](https://img.shields.io/github/v/release/m4stanuj/M4STCLAW?style=flat-square&color=00E5FF)](https://github.com/m4stanuj/M4STCLAW/releases)
+[![Stars](https://img.shields.io/github/stars/m4stanuj/M4STCLAW?style=flat-square&color=yellow)](https://github.com/m4stanuj/M4STCLAW/stargazers)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)]()
+[![Last Commit](https://img.shields.io/github/last-commit/m4stanuj/M4STCLAW?style=flat-square)](https://github.com/m4stanuj/M4STCLAW/commits)
+[![MCP](https://img.shields.io/badge/MCP-Native-00E5FF?style=flat-square)](https://modelcontextprotocol.io)
 
 **A modular, zero-cost autonomous AI framework with 16 MCP servers, 9 intelligent task chains, and multi-provider failover routing.**
 

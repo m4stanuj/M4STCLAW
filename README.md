@@ -12,7 +12,7 @@
 
 **Zero-cost AI framework with 18 MCP tools, 9 intelligent task chains, multi-provider failover routing, and a 3-tier memory architecture.**
 
-[Architecture](#-architecture) · [Features](#-features) · [Quick Start](#-quick-start) · [Task Chains](#-task-chain-routing) · [Contributing](#-contributing)
+[Architecture](#-architecture) · [Features](#-features) · [Quick Start](#-quick-start) · [Task Chains](#-task-chain-routing) · [Upgrade Walkthrough](docs/UPGRADE_WALKTHROUGH_v3.5_v3.6.md) · [Contributing](#-contributing)
 
 </div>
 
@@ -44,6 +44,14 @@ Instead of relying on a single expensive model, M4STCLAW acts as an **AI mesh ne
 │   ◄── 18 MCP Tools (Shell/Browser/Vision/Pentest)──►│
 └─────────────────────────────────────────────────────┘
 ```
+
+## ⚡ Latest Upgrade: v3.6.0
+
+M4STCLAW v3.6.0 adds secure `shell=False` command execution, zero-dependency TF-IDF memory fallback, FastAPI async execution, and live SSE token streaming in the dashboard.
+
+The previous v3.5.0 release introduced the multi-agent mesh engine with Coder, Auditor, and Tester agents working through build-audit-test loops.
+
+Read the full release breakdown: [M4STCLAW v3.5.0 and v3.6.0 Upgrade Walkthrough](docs/UPGRADE_WALKTHROUGH_v3.5_v3.6.md).
 
 ## ✨ Features
 

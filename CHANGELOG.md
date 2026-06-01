@@ -4,6 +4,8 @@ All notable changes to M4STCLAW are documented here. This project adheres to [Se
 
 ## [3.6.0] — 2026-06-01
 
+Full walkthrough: [M4STCLAW v3.5.0 and v3.6.0 Upgrade Walkthrough](docs/UPGRADE_WALKTHROUGH_v3.5_v3.6.md)
+
 ### Added
 - **FastAPI Async Migration & SSE Streaming**: Converted blocking synchronous endpoints in `app_server.py` to async, introduced `/api/execute/stream` endpoint returning a chunked `StreamingResponse` from FastAPI, and integrated async streaming loops in `fallback.py`.
 - **Zero-dependency TF-IDF + Cosine Similarity memory engine fallback**: Upgraded local memory fallback logic in `memory.py` from syntax Jaccard matching to a pure Python TF-IDF + Cosine similarity retrieval engine to index and rank permanent memories.

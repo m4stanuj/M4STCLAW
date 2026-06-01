@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ M4STCLAW v3.2 — Autonomous AI Mesh Network
+# ⚡ M4STCLAW v3.6.0 — Autonomous AI Mesh Network
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![CI](https://github.com/m4stanuj/M4STCLAW/actions/workflows/ci.yml/badge.svg)](https://github.com/m4stanuj/M4STCLAW/actions)
@@ -26,7 +26,7 @@ Instead of relying on a single expensive model, M4STCLAW acts as an **AI mesh ne
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   M4STCLAW v3.2                     │
+│                  M4STCLAW v3.6.0                    │
 │                                                     │
 │   User Query ──► Task Router ──► Chain Selection    │
 │                      │                              │

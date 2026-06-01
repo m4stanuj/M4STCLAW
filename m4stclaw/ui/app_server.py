@@ -10,6 +10,7 @@ import time
 import logging
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -29,7 +30,7 @@ from m4stclaw.servers.server_definitions import mcp
 log = logging.getLogger("m4stclaw.ui.server")
 
 # Define app
-app = FastAPI(title="M4STCLAW Dashboard Server", version="3.5.0")
+app = FastAPI(title="M4STCLAW Dashboard Server", version="3.6.0")
 
 # CORS constraints
 app.add_middleware(
@@ -96,8 +97,8 @@ async def api_execute(req: ExecuteRequest) -> Dict[str, Any]:
         else:
             messages = [{"role": "user", "content": req.prompt}]
 
-        # Call completion router with memory context
-        response = fallback.chat_complete(messages, task=task)
+        # Call completion router with memory context asynchronously
+        response = await fallback.chat_complete_async(messages, task=task)
         
         # Parse output for visual updates
         preview_type = "text"
@@ -128,6 +129,50 @@ async def api_execute(req: ExecuteRequest) -> Dict[str, Any]:
     except Exception as e:
         memory.add_episodic_log(task, req.prompt, str(e), False)
         raise HTTPException(status_code=500, detail=f"Execution error: {e}")
+
+@app.post("/api/execute/stream")
+async def api_execute_stream(req: ExecuteRequest):
+    """Execute LLM queries asynchronously and stream the response text chunks directly."""
+    # Classify task
+    task = req.task
+    if task == "auto" or not task:
+        task = router.classify_task(req.prompt)
+        
+    # Retrieve relevant semantic memories (T3)
+    memories = memory.query_semantic_memory(req.prompt, limit=3)
+    messages = []
+    
+    if memories:
+        context_blocks = []
+        for mem in memories:
+            text = mem.get("text", "")
+            meta = mem.get("metadata", {})
+            source = meta.get("source", "past interaction")
+            context_blocks.append(f"- Memory (Source: {source}): {text}")
+            
+        mem_preamble = (
+            "You have access to the following relevant memories from past interactions:\n"
+            + "\n".join(context_blocks) + "\n\n"
+            "Incorporate this context if relevant to help answer the user query.\n\n"
+        )
+        messages = [
+            {"role": "system", "content": "You are M4STCLAW, a powerful agent mesh network framework. Use retrieved memories to provide continuity across sessions."},
+            {"role": "user", "content": mem_preamble + req.prompt}
+        ]
+    else:
+        messages = [{"role": "user", "content": req.prompt}]
+        
+    async def token_generator():
+        full_response = []
+        async for chunk in fallback.chat_complete_stream(messages, task=task):
+            full_response.append(chunk)
+            yield chunk
+            
+        response_str = "".join(full_response)
+        if not response_str.startswith("ERROR:"):
+            memory.add_episodic_log(task, req.prompt, response_str, True)
+            
+    return StreamingResponse(token_generator(), media_type="text/plain")
 
 @app.post("/api/mesh/execute")
 async def api_mesh_execute(req: ExecuteRequest) -> Dict[str, Any]:

@@ -8,6 +8,8 @@ Implements:
 """
 
 import os
+import re
+import math
 import json
 import time
 import logging
@@ -183,22 +185,74 @@ def query_semantic_memory(query_text: str, limit: int = 3) -> List[Dict[str, Any
         except Exception as e:
             log.error(f"ChromaDB query failed: {e}. Searching JSON fallback.")
             
-    # Fallback simple search
+    # Fallback simple search (Upgraded to TF-IDF + Cosine Similarity)
+    if not _fallback_memories:
+        return []
+        
     ret = []
-    # Score memories by basic keyword matching as a fallback
-    query_words = set(query_text.lower().split())
-    scored = []
     
-    for mem in _fallback_memories:
-        mem_words = set(mem["text"].lower().split())
-        score = len(query_words & mem_words) / len(query_words | mem_words) if mem_words else 0
+    def tokenize(text: str) -> List[str]:
+        return re.findall(r'\w+', text.lower())
+        
+    documents = [mem["text"] for mem in _fallback_memories]
+    doc_tokens_list = [tokenize(doc) for doc in documents]
+    query_tokens = tokenize(query_text)
+    
+    if not query_tokens:
+        return []
+        
+    # Build vocabulary
+    vocab = set(query_tokens)
+    for tokens in doc_tokens_list:
+        vocab.update(tokens)
+    vocab = list(vocab)
+    vocab_idx = {word: i for i, word in enumerate(vocab)}
+    
+    # Calculate Document Frequency (DF)
+    df = {word: 0 for word in vocab}
+    for tokens in doc_tokens_list:
+        for word in set(tokens):
+            if word in df:
+                df[word] += 1
+    for word in set(query_tokens):
+        df[word] += 1
+        
+    # Calculate Inverse Document Frequency (IDF)
+    n_docs = len(documents) + 1
+    idf = {}
+    for word in vocab:
+        idf[word] = math.log(n_docs / df[word]) + 1.0
+        
+    def get_tfidf_vector(tokens: List[str]) -> List[float]:
+        tf = {}
+        for token in tokens:
+            tf[token] = tf.get(token, 0) + 1
+        vec = [0.0] * len(vocab)
+        for token, count in tf.items():
+            if token in vocab_idx:
+                vec[vocab_idx[token]] = count * idf[token]
+        return vec
+        
+    def cosine_similarity(v1: List[float], v2: List[float]) -> float:
+        dot_prod = sum(a * b for a, b in zip(v1, v2))
+        norm_a = math.sqrt(sum(a * a for a in v1))
+        norm_b = math.sqrt(sum(b * b for b in v2))
+        if norm_a == 0.0 or norm_b == 0.0:
+            return 0.0
+        return dot_prod / (norm_a * norm_b)
+        
+    query_vec = get_tfidf_vector(query_tokens)
+    scored = []
+    for idx, mem in enumerate(_fallback_memories):
+        doc_vec = get_tfidf_vector(doc_tokens_list[idx])
+        score = cosine_similarity(query_vec, doc_vec)
         scored.append((score, mem))
         
     # Sort by score descending
     scored.sort(key=lambda x: x[0], reverse=True)
     
     for score, mem in scored[:limit]:
-        if score > 0.0:  # only return matches
+        if score > 0.05:  # filter threshold
             ret.append({
                 "id": mem["id"],
                 "text": mem["text"],

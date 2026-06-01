@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "m4stclaw"
-version = "3.5.0"
+version = "3.6.0"
 description = "Autonomous AI Mesh Network — Multi-provider LLM routing with MCP integration"
 readme = "README.md"
 authors = [

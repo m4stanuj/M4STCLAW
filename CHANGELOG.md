@@ -2,6 +2,17 @@
 
 All notable changes to M4STCLAW are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.6.0] — 2026-06-01
+
+### Added
+- **FastAPI Async Migration & SSE Streaming**: Converted blocking synchronous endpoints in `app_server.py` to async, introduced `/api/execute/stream` endpoint returning a chunked `StreamingResponse` from FastAPI, and integrated async streaming loops in `fallback.py`.
+- **Zero-dependency TF-IDF + Cosine Similarity memory engine fallback**: Upgraded local memory fallback logic in `memory.py` from syntax Jaccard matching to a pure Python TF-IDF + Cosine similarity retrieval engine to index and rank permanent memories.
+- **Secure command execution (`shell=False`)**: Swapped unsafe `shell=True` subprocess runs in `shell_handler.py` with secure `shell=False` execution, using `shlex.split(posix=False)` for argument checks and handling Windows command prompt built-ins safely via explicit `cmd.exe /c` lists.
+
+### Changed
+- **Dashboard UI Token Streaming**: Updated playground console chat submission in `static/app.js` to process chunked HTTP streams using `ReadableStream` reader loops, enabling real-time character-by-character updates.
+- **Version bump**: Bumped version to `3.6.0` across package config metadata files (`pyproject.toml`, `setup.py`, `__init__.py`, launcher logs, and static templates).
+
 ## [3.5.0] — 2026-06-01
 
 ### Added

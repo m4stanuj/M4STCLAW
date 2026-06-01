@@ -6,6 +6,8 @@ and checks binaries against a strict allow-list.
 """
 
 import os
+import shlex
+import shutil
 import subprocess
 import logging
 from typing import Tuple
@@ -49,7 +51,7 @@ def is_command_safe(cmd_str: str) -> Tuple[bool, str]:
     return True, ""
 
 def execute_command(cmd_str: str, cwd: str = ".") -> str:
-    """Executes a command safely inside the sandbox directory."""
+    """Executes a command safely inside the sandbox directory using shell=False."""
     # Resolve CWD and ensure directory boundary check
     cwd_resolved = os.path.abspath(os.path.join(SANDBOX_DIR, cwd))
     
@@ -65,13 +67,31 @@ def execute_command(cmd_str: str, cwd: str = ".") -> str:
     if not safe:
         return f"SECURITY BLOCK: {reason}"
         
-    log.info(f"Running command: '{cmd_str}' in '{cwd_resolved}'")
-    
     try:
+        # Safely split command arguments (posix=False preserves Windows backslashes)
+        args = shlex.split(cmd_str, posix=False)
+        if not args:
+            return "ERROR: Empty command."
+            
+        binary = args[0]
+        # Check if binary is standalone executable
+        executable = shutil.which(binary)
+        
+        # Windows command prompt built-ins fallback (echo, dir, etc.)
+        if not executable and os.name == "nt" and binary.lower() in ("dir", "echo"):
+            cmd_args = ["cmd.exe", "/c"] + args
+            executable = shutil.which("cmd.exe") or "cmd.exe"
+        else:
+            cmd_args = args
+            if not executable:
+                return f"ERROR: Command executable '{binary}' not found on system PATH."
+                
+        log.info(f"Running command (shell=False): {cmd_args} in '{cwd_resolved}'")
+        
         # Run process safely
         res = subprocess.run(
-            cmd_str,
-            shell=True,
+            cmd_args,
+            shell=False,
             cwd=cwd_resolved,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

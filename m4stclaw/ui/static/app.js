@@ -194,39 +194,76 @@ document.addEventListener("DOMContentLoaded", () => {
             drawDAG(task, "router");
             addLogLine("route", "Routing to chain: " + task.toUpperCase());
 
-            // Query backend (route to mesh API if "agent" is selected)
-            const endpoint = (task === "agent") ? "/api/mesh/execute" : "/api/execute";
-            try {
-                const response = await fetch(endpoint, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt: prompt, task: task })
-                });
-
-                const data = await response.json();
-
-                if (data.status === "success") {
-                    addChatBubble("assistant", data.response);
-                    addLogLine("success", "Response received in " + data.duration_ms + "ms.");
+            // Query backend
+            if (task === "agent") {
+                try {
+                    const response = await fetch("/api/mesh/execute", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ prompt: prompt, task: task })
+                    });
+                    const data = await response.json();
                     
-                    // Display agent execution logs in the activity log
-                    if (data.logs && Array.isArray(data.logs)) {
-                        data.logs.forEach(logLine => {
-                            addLogLine(logLine.type, logLine.text);
-                        });
+                    if (data.status === "success") {
+                        addChatBubble("assistant", data.response);
+                        addLogLine("success", "Mesh execution completed in " + data.duration_ms + "ms.");
+                        if (data.logs && Array.isArray(data.logs)) {
+                            data.logs.forEach(logLine => {
+                                addLogLine(logLine.type, logLine.text);
+                            });
+                        }
+                    } else {
+                        addChatBubble("assistant", "ERROR: " + (data.detail || data.message || "Unknown error"));
+                        addLogLine("error", "Mesh task execution failed.");
                     }
-
-                    // Render preview if applicable
-                    if (data.preview_type === "diff" && data.preview_content) {
-                        renderDiffPreview(data.preview_content);
-                    }
-                } else {
-                    addChatBubble("assistant", "ERROR: " + (data.detail || data.message || "Unknown error"));
-                    addLogLine("error", "Task execution failed.");
+                } catch (err) {
+                    addChatBubble("assistant", "Connection error: " + err);
+                    addLogLine("error", "Failed to contact API backend.");
                 }
-            } catch (err) {
-                addChatBubble("assistant", "Connection error: " + err);
-                addLogLine("error", "Failed to contact API backend.");
+            } else {
+                try {
+                    const response = await fetch("/api/execute/stream", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ prompt: prompt, task: task })
+                    });
+                    
+                    if (!response.ok) {
+                        addChatBubble("assistant", "ERROR: Failed to establish text stream.");
+                        addLogLine("error", "Failed to fetch model stream.");
+                        // Reset DAG and return
+                        drawDAG(null, null);
+                        return;
+                    }
+                    
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+                    let assistantBubble = addChatBubble("assistant", "");
+                    let fullText = "";
+                    
+                    addLogLine("info", "Receiving real-time stream tokens...");
+                    
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        const chunk = decoder.decode(value, { stream: true });
+                        fullText += chunk;
+                        assistantBubble.querySelector("p").textContent = fullText;
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                    
+                    addLogLine("success", "Stream delivery completed successfully.");
+                    
+                    // Render preview dynamically if a diff block is detected in the response
+                    if (fullText.includes("diff --git") || fullText.includes("+++")) {
+                        const diffLines = fullText.split("\n").filter(line => line.startsWith("+") || line.startsWith("-") || line.startsWith("@@") || line.startsWith("diff")).slice(0, 20);
+                        renderDiffPreview(diffLines);
+                    }
+                } catch (err) {
+                    addChatBubble("assistant", "Connection error: " + err);
+                    addLogLine("error", "Failed to contact API backend.");
+                }
             }
 
             // Reset DAG

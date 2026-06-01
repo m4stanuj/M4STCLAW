@@ -188,3 +188,194 @@ def chat_complete(messages: List[Dict[str, str]], task: str = "speed", max_token
             return result
             
     return f"ERROR: All providers failed for task '{task}'. Please check your internet connection or API keys in .env."
+
+async def execute_request_async(provider: Tuple[str, str, str, str], messages: List[Dict[str, str]], max_tokens: int) -> Optional[str]:
+    """Sends an asynchronous completion request to a specific provider."""
+    name, base_url, model, p_type = provider
+    keys = get_keys_for_provider(name)
+    
+    if name == "ollama":
+        key, key_idx = "ollama-local", 0
+    else:
+        key, key_idx = get_next_key(name, keys)
+        if key == "PLACEHOLDER_NO_KEY":
+            return None
+            
+    try:
+        timeout = httpx.Timeout(25.0, connect=12.0)
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            if p_type == "openai":
+                headers = {
+                    "Authorization": f"Bearer {key}",
+                    "Content-Type": "application/json"
+                }
+                if name == "openrouter":
+                    headers["HTTP-Referer"] = "https://github.com/m4stanuj/M4STCLAW"
+                    headers["X-Title"] = "M4STCLAW Workspace"
+                    
+                payload = {
+                    "model": model,
+                    "messages": messages,
+                    "max_tokens": max_tokens,
+                    "temperature": 0.7
+                }
+                
+                response = await client.post(f"{base_url}/chat/completions", headers=headers, json=payload)
+                
+                if response.status_code == 429:
+                    set_cooldown(name, key_idx, 60.0)
+                    return None
+                elif response.status_code in (401, 403):
+                    set_cooldown(name, key_idx, 3600.0)
+                    return None
+                    
+                response.raise_for_status()
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+                
+            elif p_type == "gemini":
+                url = f"{base_url}/models/{model}:generateContent?key={key}"
+                payload = format_gemini_messages(messages)
+                payload["generationConfig"] = {
+                    "maxOutputTokens": max_tokens,
+                    "temperature": 0.7
+                }
+                
+                response = await client.post(url, json=payload)
+                
+                if response.status_code == 429:
+                    set_cooldown(name, key_idx, 60.0)
+                    return None
+                elif response.status_code in (401, 403):
+                    set_cooldown(name, key_idx, 3600.0)
+                    return None
+                    
+                response.raise_for_status()
+                data = response.json()
+                candidates = data.get("candidates", [])
+                if candidates:
+                    return candidates[0]["content"]["parts"][0]["text"]
+                return None
+                
+    except Exception as e:
+        log.warning(f"Async request failed for provider '{name}' ({model}): {e}")
+        set_cooldown(name, key_idx, 15.0)
+        return None
+    return None
+
+async def chat_complete_async(messages: List[Dict[str, str]], task: str = "speed", max_tokens: int = 1024) -> str:
+    """Asynchronously routes completion request through task chain and falls back if needed."""
+    chain = TASK_CHAINS.get(task, TASK_CHAINS["speed"])
+    tried = set()
+    
+    for provider in chain:
+        name = provider[0]
+        tried.add(name)
+        log.info(f"Attempting async completion via task chain provider: '{name}' ({provider[2]})")
+        
+        result = await execute_request_async(provider, messages, max_tokens)
+        if result is not None:
+            return result
+            
+    log.warning(f"Async task chain '{task}' exhausted. Falling back to master provider list...")
+    for provider in ALL_PROVIDERS:
+        name = provider[0]
+        if name in tried:
+            continue
+            
+        log.info(f"Attempting async master fallback provider: '{name}'")
+        result = await execute_request_async(provider, messages, max_tokens)
+        if result is not None:
+            return result
+            
+    return f"ERROR: All providers failed for task '{task}'. Please check your internet connection or API keys in .env."
+
+async def chat_complete_stream(messages: List[Dict[str, str]], task: str = "speed", max_tokens: int = 1024):
+    """Routes completion requests and yields real-time text tokens asynchronously."""
+    chain = TASK_CHAINS.get(task, TASK_CHAINS["speed"])
+    tried = set()
+    
+    for provider in chain:
+        name, base_url, model, p_type = provider
+        tried.add(name)
+        keys = get_keys_for_provider(name)
+        
+        if name == "ollama":
+            key, key_idx = "ollama-local", 0
+        else:
+            key, key_idx = get_next_key(name, keys)
+            if key == "PLACEHOLDER_NO_KEY":
+                continue
+                
+        log.info(f"Attempting async stream via provider: '{name}' ({model})")
+        
+        try:
+            timeout = httpx.Timeout(25.0, connect=12.0)
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                if p_type == "openai":
+                    headers = {
+                        "Authorization": f"Bearer {key}",
+                        "Content-Type": "application/json"
+                    }
+                    if name == "openrouter":
+                        headers["HTTP-Referer"] = "https://github.com/m4stanuj/M4STCLAW"
+                        headers["X-Title"] = "M4STCLAW Workspace"
+                        
+                    payload = {
+                        "model": model,
+                        "messages": messages,
+                        "max_tokens": max_tokens,
+                        "temperature": 0.7,
+                        "stream": True
+                    }
+                    
+                    async with client.stream("POST", f"{base_url}/chat/completions", headers=headers, json=payload) as response:
+                        if response.status_code == 200:
+                            async for line in response.aiter_lines():
+                                line = line.strip()
+                                if not line:
+                                    continue
+                                if line.startswith("data: "):
+                                    data_content = line[6:]
+                                    if data_content == "[DONE]":
+                                        break
+                                    try:
+                                        chunk_data = json.loads(data_content)
+                                        choices = chunk_data.get("choices", [])
+                                        if choices:
+                                            delta = choices[0].get("delta", {})
+                                            content = delta.get("content", "")
+                                            if content:
+                                                yield content
+                                    except Exception:
+                                        pass
+                            return
+                        elif response.status_code == 429:
+                            set_cooldown(name, key_idx, 60.0)
+                        elif response.status_code in (401, 403):
+                            set_cooldown(name, key_idx, 3600.0)
+                            
+                elif p_type == "gemini":
+                    url = f"{base_url}/models/{model}:generateContent?key={key}"
+                    payload = format_gemini_messages(messages)
+                    payload["generationConfig"] = {
+                        "maxOutputTokens": max_tokens,
+                        "temperature": 0.7
+                    }
+                    resp = await client.post(url, json=payload)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        candidates = data.get("candidates", [])
+                        if candidates:
+                            yield candidates[0]["content"]["parts"][0]["text"]
+                        return
+                    elif resp.status_code == 429:
+                        set_cooldown(name, key_idx, 60.0)
+                    elif resp.status_code in (401, 403):
+                        set_cooldown(name, key_idx, 3600.0)
+                        
+        except Exception as e:
+            log.warning(f"Async stream failed for provider '{name}' ({model}): {e}")
+            set_cooldown(name, key_idx, 15.0)
+            
+    yield f"ERROR: Streaming failed or all providers rate-limited. Please check keys."

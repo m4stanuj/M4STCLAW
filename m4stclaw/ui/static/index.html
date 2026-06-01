@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="M4STCLAW v3 — High-performance glassmorphic AI mesh network command center and autonomous multi-agent developer console.">
+    <title>M4STCLAW Command Center</title>
+    <!-- Outfit Font for layout and JetBrains Mono for telemetry/logs -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Particle Canvas for Success sparkles / Whip interrupt glitched screens -->
+    <canvas id="particle-overlay-canvas"></canvas>
+
+    <!-- Main App Grid -->
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar" aria-label="Navigation Sidebar">
+            <div class="sidebar-header">
+                <span class="logo-icon">🧠</span>
+                <h1 class="logo-text">M4STCLAW</h1>
+                <span class="logo-version">v3.2</span>
+            </div>
+            
+            <nav class="sidebar-nav" aria-label="Main Navigation">
+                <button id="nav-btn-dashboard" class="nav-item active" type="button">
+                    <span class="nav-icon">📊</span> Dashboard
+                </button>
+                <button id="nav-btn-playground" class="nav-item" type="button">
+                    <span class="nav-icon">💬</span> Interactive Chat
+                </button>
+                <button id="nav-btn-keys" class="nav-item" type="button">
+                    <span class="nav-icon">🔑</span> API Key Manager
+                </button>
+                <button id="nav-btn-telemetry" class="nav-item" type="button">
+                    <span class="nav-icon">📈</span> System Telemetry
+                </button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="gamification-controls">
+                    <span class="gamification-title">Theme Controls:</span>
+                    <div class="theme-buttons">
+                        <button id="mode-btn-wand" class="theme-btn active" title="Enable Magic Sparkles (Success Theme)" type="button">🪄 Wand</button>
+                        <button id="mode-btn-whip" class="theme-btn" title="Enable Laser Whip (Interrupt Theme)" type="button">⚡ Whip</button>
+                    </div>
+                </div>
+                <div class="status-indicator">
+                    <span class="indicator-dot green"></span>
+                    <span class="status-text">Server Active</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="app-main">
+            
+            <!-- Dashboard View -->
+            <section id="view-dashboard" class="main-view active-view" aria-labelledby="dashboard-title">
+                <div class="view-header">
+                    <h2 id="dashboard-title" class="view-title">Agent Mesh Dashboard</h2>
+                    <p class="view-desc">Monitor live autonomous reasoning chains, active nodes, and key rotation status.</p>
+                </div>
+                
+                <!-- Telemetry Cards Grid -->
+                <div class="telemetry-grid">
+                    <div class="telemetry-card">
+                        <span class="card-icon blue">💰</span>
+                        <div class="card-details">
+                            <span class="card-label">Total API Cost</span>
+                            <span id="telemetry-cost" class="card-value">$0.00</span>
+                        </div>
+                    </div>
+                    <div class="telemetry-card">
+                        <span class="card-icon green">⚡</span>
+                        <div class="card-details">
+                            <span class="card-label">Throughput Speed</span>
+                            <span id="telemetry-speed" class="card-value">0 t/s</span>
+                        </div>
+                    </div>
+                    <div class="telemetry-card">
+                        <span class="card-icon purple">🎯</span>
+                        <div class="card-details">
+                            <span class="card-label">Cache Hit Rate</span>
+                            <span id="telemetry-cache-rate" class="card-value">58%</span>
+                        </div>
+                    </div>
+                    <div class="telemetry-card">
+                        <span class="card-icon orange">🔄</span>
+                        <div class="card-details">
+                            <span class="card-label">Active Rotator Keys</span>
+                            <span id="telemetry-keys-count" class="card-value">56 Keys</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Graph & Logs split section -->
+                <div class="dashboard-workspace">
+                    <!-- Live DAG Canvas -->
+                    <div class="workspace-card dag-container">
+                        <h3 class="card-title">Live Execution DAG Pathway</h3>
+                        <div class="dag-canvas-wrapper">
+                            <svg id="dag-canvas" width="100%" height="100%" viewBox="0 0 800 400" aria-label="Visual Directed Acyclic Graph of active agents"></svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Live Log Terminal -->
+                    <div class="workspace-card log-terminal">
+                        <div class="terminal-header">
+                            <h3 class="card-title">Active Node Log Console</h3>
+                            <button id="btn-clear-logs" class="terminal-action-btn" type="button">Clear Logs</button>
+                        </div>
+                        <div id="log-terminal-output" class="terminal-body" aria-live="polite">
+                            <div class="log-line system">[SYSTEM] M4STCLAW Core Workspace initialized. Listening on localhost...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Interactive Playground View -->
+            <section id="view-playground" class="main-view" aria-labelledby="playground-title">
+                <div class="view-header">
+                    <h2 id="playground-title" class="view-title">Interactive AI Console</h2>
+                    <p class="view-desc">Interface directly with the M4STCLAW router chains and execute developer tasks.</p>
+                </div>
+                
+                <div class="playground-layout">
+                    <!-- Chat Container -->
+                    <div class="chat-container">
+                        <div id="chat-messages-container" class="chat-messages" aria-live="polite">
+                            <div class="chat-bubble assistant">
+                                <p>Welcome to the M4STCLAW agent interface. Ask me to route tasks, scan local ports, fetch pages, or write code!</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Chat Input Box -->
+                        <form id="chat-input-form" class="chat-input-bar">
+                            <div class="input-options">
+                                <label for="chat-task-select" class="visually-hidden">Task Routing Chain</label>
+                                <select id="chat-task-select" class="chat-select">
+                                    <option value="speed">Speed Chain (Cerebras/Groq)</option>
+                                    <option value="reasoning">Reasoning Chain (Deepseek R1/Gemini Pro)</option>
+                                    <option value="code">Code Chain (Deepseek/Qwen Coder)</option>
+                                    <option value="vision">Vision Chain (Gemini/Llava)</option>
+                                    <option value="research">Research Chain (Perplexity/Gemini)</option>
+                                    <option value="agent">Agent Chain (Deepseek R1/Ollama)</option>
+                                    <option value="pentest">Pentest Chain (Shodan/Nmap/Nuclei)</option>
+                                </select>
+                            </div>
+                            <div class="input-wrapper">
+                                <input id="chat-user-prompt" type="text" placeholder="Type a task prompt... (e.g. nmap scan localhost)" required aria-label="Task prompt input">
+                                <button id="chat-btn-submit" class="chat-submit-btn" type="submit">Execute</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Side Interactive Panel (Diff / Screenshot preview) -->
+                    <div class="playground-side-panel">
+                        <div class="workspace-card preview-card">
+                            <h3 class="card-title">Live Code Diff / Visual Previews</h3>
+                            <div id="playground-preview-area" class="preview-body">
+                                <p class="preview-placeholder">Visual outputs, page screenshots, and file diff previews will appear here during execution.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- API Key Manager View -->
+            <section id="view-keys" class="main-view" aria-labelledby="keys-title">
+                <div class="view-header">
+                    <h2 id="keys-title" class="view-title">Rotator Key Configuration</h2>
+                    <p class="view-desc">Configure your environment variables and paste smart key rotations directly to disk.</p>
+                </div>
+                
+                <div class="workspace-card keys-card">
+                    <h3 class="card-title">Secret Environment Editor</h3>
+                    <form id="keys-manager-form" class="keys-grid-form">
+                        <div class="keys-grid">
+                            <div class="form-group">
+                                <label for="key-input-groq">Groq API Key (GSK):</label>
+                                <input id="key-input-groq" type="password" placeholder="gsk_..." autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label for="key-input-gemini">Gemini API Key (AIza):</label>
+                                <input id="key-input-gemini" type="password" placeholder="AIzaSy..." autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label for="key-input-openrouter">OpenRouter API Key (sk-or):</label>
+                                <input id="key-input-openrouter" type="password" placeholder="sk-or-v1-..." autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label for="key-input-deepseek">DeepSeek API Key (sk):</label>
+                                <input id="key-input-deepseek" type="password" placeholder="sk-..." autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label for="key-input-cerebras">Cerebras API Key (csk):</label>
+                                <input id="key-input-cerebras" type="password" placeholder="csk-..." autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label for="key-input-composio">Composio API Key (comp):</label>
+                                <input id="key-input-composio" type="password" placeholder="sk_comp_..." autocomplete="off">
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button id="btn-save-keys" class="keys-save-btn" type="submit">Commit API Secrets</button>
+                            <span id="keys-save-status" class="save-status-text"></span>
+                        </div>
+                    </form>
+                </div>
+            </section>
+            
+            <!-- Telemetry View -->
+            <section id="view-telemetry" class="main-view" aria-labelledby="telemetry-title">
+                <div class="view-header">
+                    <h2 id="telemetry-title" class="view-title">System Telemetry & Health</h2>
+                    <p class="view-desc">Detailed logs, active database sizes, and API cooldown metrics.</p>
+                </div>
+                
+                <div class="telemetry-details-layout">
+                    <div class="workspace-card details-card">
+                        <h3 class="card-title">Memory & Database Stats</h3>
+                        <div class="telemetry-metrics-list">
+                            <div class="metric-item">
+                                <span class="metric-label">Semantic Memory (T3 DB Path):</span>
+                                <span id="telemetry-db-path" class="metric-val">~/.config/m4stclaw/chromadb</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Cache Entries Cached:</span>
+                                <span id="telemetry-cache-size" class="metric-val">0 entries</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Total Run Errors Logged:</span>
+                                <span id="telemetry-errors-count" class="metric-val">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="workspace-card details-card">
+                        <h3 class="card-title">Key Cooldown Dashboard</h3>
+                        <div id="cooldowns-list-container" class="cooldowns-grid">
+                            <p class="cooldown-empty-msg">No keys are currently in a cooldown state. All providers ready.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

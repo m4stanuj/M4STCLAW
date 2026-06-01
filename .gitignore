@@ -1,47 +1,49 @@
-# Environment
-.env
-.env.local
-.env.*.local
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.egg
 *.egg-info/
 dist/
 build/
+.eggs/
+
+# Virtual Environments
 venv/
 .venv/
-
-# ChromaDB
-chroma_data/
-cache_db/
-
-# Memory
-memory_3tier.json
-memory_vectordb/
+env/
+.env
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.project
+.settings/
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-logs/
+desktop.ini
 
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
+.tox/
 
-# Internal changelog
-.changelog_internal.md
+# Logs
+*.log
 
-.dev_notes.md
+# ChromaDB local data
+chromadb/
+
+# Screenshots
+screenshots/
+
+# Config secrets
+*.env
+!.env.template

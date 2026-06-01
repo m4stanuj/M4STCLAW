@@ -1,46 +1,47 @@
 <div align="center">
 
-# 🧠 M4STCLAW v3 — Autonomous AI Mesh Network
+# ⚡ M4STCLAW v3.2 — Autonomous AI Mesh Network
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![CI](https://github.com/m4stanuj/M4STCLAW/actions/workflows/ci.yml/badge.svg)](https://github.com/m4stanuj/M4STCLAW/actions)
-[![Release](https://img.shields.io/github/v/release/m4stanuj/M4STCLAW?style=flat-square&color=00E5FF)](https://github.com/m4stanuj/M4STCLAW/releases)
-[![Stars](https://img.shields.io/github/stars/m4stanuj/M4STCLAW?style=flat-square&color=yellow)](https://github.com/m4stanuj/M4STCLAW/stargazers)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/m4stanuj/M4STCLAW?style=flat-square&color=3b82f6)](https://github.com/m4stanuj/M4STCLAW/releases)
+[![Stars](https://img.shields.io/github/stars/m4stanuj/M4STCLAW?style=flat-square&color=f59e0b)](https://github.com/m4stanuj/M4STCLAW/stargazers)
+[![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/m4stanuj/M4STCLAW?style=flat-square)](https://github.com/m4stanuj/M4STCLAW/commits)
-[![MCP](https://img.shields.io/badge/MCP-Native-00E5FF?style=flat-square)](https://modelcontextprotocol.io)
+[![MCP](https://img.shields.io/badge/MCP-Native-8b5cf6?style=flat-square)](https://modelcontextprotocol.io)
 
-**A modular, zero-cost autonomous AI framework with 16 MCP servers, 9 intelligent task chains, and multi-provider failover routing.**
+**Zero-cost AI framework with 18 MCP tools, 9 intelligent task chains, multi-provider failover routing, and a 3-tier memory architecture.**
 
-[Architecture](#architecture) · [Features](#features) · [Quick Start](#quick-start) · [Task Chains](#task-chains) · [Contributing](#contributing)
+[Architecture](#-architecture) · [Features](#-features) · [Quick Start](#-quick-start) · [Task Chains](#-task-chain-routing) · [Contributing](#-contributing)
 
 </div>
 
 ---
 
-## 🔥 What is M4STCLAW?
+## What is M4STCLAW?
 
-M4STCLAW is a **Model Context Protocol (MCP)** native AI orchestration framework that dynamically routes tasks across 25+ AI providers using 56 rotating API keys — achieving **100% uptime at $0 cost**.
+M4STCLAW is a **Model Context Protocol (MCP)** native AI orchestration framework that dynamically routes tasks across multiple AI providers using rotating API keys — achieving **near-100% uptime at $0 cost**.
 
-Instead of relying on a single expensive model, M4STCLAW acts as an **AI mesh network** — automatically selecting the best model for each specific task type, with instant failover if any provider rate-limits.
+Instead of relying on a single expensive model, M4STCLAW acts as an **AI mesh network** — automatically selecting the best model for each task type, with instant failover if any provider rate-limits.
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   M4STCLAW v3                       │
+│                   M4STCLAW v3.2                     │
 │                                                     │
 │   User Query ──► Task Router ──► Chain Selection    │
 │                      │                              │
 │            ┌─────────┼─────────┐                    │
 │            ▼         ▼         ▼                    │
-│        Speed     Reasoning    Code                  │
-│       Cerebras    Kimi K2   MiMo-V2                │
+│        Speed     Reasoning    Code    ... 6 more    │
+│       Cerebras   DeepSeek-R1 DeepSeek               │
 │         │           │          │                    │
 │     ┌───┴───┐  ┌────┴───┐ ┌───┴────┐              │
-│     Groq  SN   DS-R1 Nem  Qwen3 K2               │
-│     (fallback) (fallback) (fallback)               │
+│     Groq  SN   Gemini OR  OR  Qwen                 │
+│     (fallback) (fallback) (fallback)                │
 │                                                     │
-│   ◄── Semantic Cache (3600s TTL, 40-60% savings) ──►│
+│   ◄── Semantic Cache (3600s TTL, ~58% hit rate) ──► │
 │   ◄── 3-Tier Memory (Working→Episodic→Semantic)  ──►│
+│   ◄── 18 MCP Tools (Shell/Browser/Vision/Pentest)──►│
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -48,141 +49,172 @@ Instead of relying on a single expensive model, M4STCLAW acts as an **AI mesh ne
 
 ### 🔀 Intelligent Multi-Provider Routing
 - **9 specialized task chains**: Speed, Reasoning, Code, Vision, Research, Agent, Write, Pentest, Offline
-- **56 rotating API keys** across 7 providers (Groq, Gemini, OpenRouter, Cerebras, SambaNova, DeepSeek, Together)
-- **Automatic failover**: If primary model rate-limits, fallback fires in <100ms
+- **Rotating API keys** across 7+ providers (Groq, Gemini, OpenRouter, Cerebras, SambaNova, DeepSeek, Together)
+- **Smart key detection** — paste any key prefixed with `gsk_`, `AIza`, `sk-or-`, etc. and it auto-routes to the right provider
+- **Automatic failover** — if primary model rate-limits, fallback fires in <100ms
 
 ### 🧠 3-Tier Memory Architecture
-| Tier | Type | Backend | Use Case |
-|------|------|---------|----------|
-| T1 | Working Memory | JSON State | Current session context |
-| T2 | Episodic Memory | JSON Logs | Cross-session task history |
-| T3 | Semantic Memory | ChromaDB | Permanent vector embeddings |
 
-### 🛡️ Offensive Security Integration (CAI Layer)
-- Automated **Nmap** port scanning
-- **Nuclei** vulnerability detection
-- **Shodan** reconnaissance
-- **CVE** database lookups
-- Session-based pentest workflows with auto-generated reports
+| Tier | Type | Backend | Purpose |
+|------|------|---------|---------|
+| T1 | Working Memory | In-RAM JSON | Current session context |
+| T2 | Episodic Memory | JSON on disk | Cross-session task history |
+| T3 | Semantic Memory | ChromaDB / JSON fallback | Permanent vector embeddings |
 
-### 👁️ 5-Layer Vision Engine
-1. **OpenCV** — Computer vision preprocessing
-2. **Tesseract** — OCR text extraction
-3. **Windows UIA** — Desktop UI automation
-4. **Ollama (Local)** — Offline image understanding
-5. **Gemini 2.5 Flash** — Cloud multimodal analysis
+### 🛡️ Security Integration (CAI Layer)
+- **Nmap** port scanning (scope-restricted to localhost)
+- **Nuclei** vulnerability template detection
+- **Shodan** IP reconnaissance
+- Strict target whitelist enforcement — no external scanning without explicit authorization
 
-### 🔌 16 MCP Servers
-```
-task_router    │ universal_bridge │ pentest      │ m4st_agent
-memory         │ research         │ skills       │ react
-file           │ shell            │ browser      │ vision
-notify         │ scrapling        │ llm_fallback │ _mcp_base
-```
+### 👁️ Vision Engine
+- **Tesseract OCR** — text extraction from screenshots
+- **Gemini 2.5 Flash** — cloud multimodal analysis
+- **Ollama LLaVA** — offline local image understanding
+- **Pillow** — automated screen capture
+
+### 🔌 18 MCP Tools
+
+| Category | Tools |
+|----------|-------|
+| **Routing** | `router_classify`, `router_status`, `llm_query` |
+| **Memory** | `memory_get_session`, `memory_set_session`, `memory_add_episodic`, `memory_search_episodic`, `memory_add_semantic`, `memory_query_semantic` |
+| **Execution** | `shell_execute`, `browser_visit`, `vision_analyze`, `scrapling_fetch` |
+| **Security** | `pentest_nmap`, `pentest_nuclei`, `pentest_shodan` |
+| **Integration** | `composio_action` |
+
+### 📊 Web Dashboard
+Enterprise-grade admin panel served on `localhost:8000`:
+- Real-time telemetry (cost, throughput, cache stats)
+- Interactive AI console with chain selection
+- Provider status table with health monitoring
+- API key configuration manager
+- Live task routing DAG visualization
+- Activity log console
 
 ## 🏗️ Architecture
 
-```mermaid
-graph TB
-    A[User Input] --> B[Task Router MCP]
-    B --> C{Task Classification}
-    C -->|Speed| D[Cerebras Chain]
-    C -->|Reasoning| E[Kimi K2 Chain]
-    C -->|Code| F[MiMo-V2 Chain]
-    C -->|Vision| G[Gemini 2.5 Chain]
-    C -->|Pentest| H[DeepSeek-R1 Chain]
-    D & E & F & G & H --> I[Semantic Cache]
-    I --> J[3-Tier Memory]
-    J --> K[Response]
+```
+m4stclaw/
+├── core/
+│   ├── config.py       # .env loader, key rotation, cooldowns
+│   ├── router.py       # 9-chain task classifier
+│   ├── fallback.py     # Multi-provider LLM fallback loop
+│   ├── cache.py        # Semantic fuzzy cache (Jaccard similarity)
+│   └── memory.py       # 3-tier memory engine
+├── servers/
+│   ├── server_definitions.py  # Unified FastMCP server (18 tools)
+│   ├── shell_handler.py       # Sandboxed command execution
+│   ├── browser_handler.py     # Playwright + HTTP fallback
+│   ├── vision_handler.py      # OCR + multimodal vision
+│   ├── scrapling_handler.py   # Anti-bot web scraper
+│   ├── pentest_handler.py     # Nmap/Nuclei/Shodan
+│   └── composio_handler.py    # Third-party integrations
+├── ui/
+│   ├── app_server.py          # FastAPI + MCP mount
+│   └── static/                # Dashboard (HTML/CSS/JS)
+├── start.py                   # System launcher
+└── setup.py                   # Package configuration
 ```
 
 ## 🚀 Quick Start
 
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/m4stanuj/M4STCLAW.git
 cd M4STCLAW
 
-# Copy environment template
+# Configure
 cp .env.template .env
 # Edit .env with your API keys
 
-# Install dependencies
+# Install
 pip install -r requirements.txt
 
 # Launch
-python start.bat
+python start.py
 ```
+
+Dashboard opens at **http://localhost:8000** • MCP endpoint at **http://localhost:8000/mcp**
+
+### Installation Options
+
+```bash
+# Minimal (core routing only)
+pip install -r requirements.txt
+
+# Full (ChromaDB, Playwright, OCR, Composio)
+pip install -e ".[full]"
+
+# Development (includes testing tools)
+pip install -e ".[dev]"
+```
+
+## 🔀 Task Chain Routing
+
+| Chain | Primary | Fallbacks | Best For |
+|-------|---------|-----------|----------|
+| **Speed** | Cerebras | Groq → Gemini → OpenRouter → Together | Quick answers, translations |
+| **Reasoning** | DeepSeek R1 | Gemini → OpenRouter → Together | Logic, math, analysis |
+| **Code** | DeepSeek | OpenRouter → SambaNova → Groq → Ollama | Programming, debugging |
+| **Vision** | Gemini 2.5 | OpenRouter | Image analysis, OCR |
+| **Research** | DeepSeek R1 | Gemini → OpenRouter → Together | Deep dives, trends |
+| **Agent** | DeepSeek R1 | Gemini → Groq → Ollama | Workflow automation |
+| **Write** | Cerebras | Groq → Together → OpenRouter | Essays, docs, emails |
+| **Pentest** | Groq | DeepSeek R1 → Together | Security analysis |
+| **Offline** | Ollama | — | No internet, local only |
 
 ## 📊 Performance
 
 | Metric | Value |
 |--------|-------|
 | Avg Response Time | ~1.2s (cached: ~0.3s) |
-| API Cost | $0/month |
-| Uptime | 99.9%+ (multi-provider failover) |
-| Cache Hit Rate | 58% on production workloads |
-| Memory Recall | Semantic search across 14,000+ stored embeddings |
+| API Cost | $0/month (free-tier routing) |
+| Cache Hit Rate | ~58% on production workloads |
 | Provider Failover | <100ms automatic switchover |
-| Daily Tasks Processed | ~2,400 (personal production instance) |
+| Memory Tiers | 3 (Working → Episodic → Semantic) |
+| MCP Tools | 18 registered endpoints |
 
-## 🏆 Battle-Tested
+## 🔒 Security
 
-> M4STCLAW has been in **continuous production since September 2023**, starting as a single-model assistant and evolving through 3 major rewrites into the current 16-server mesh architecture. Every feature in this repo was born from real-world necessity, not theoretical design.
-
-### Production Milestones
-- **Sep 2023** — v1.0 shipped. Single-model, single-provider. It worked, barely.
-- **Jun 2024** — v2.0 rewrote everything. Added multi-model routing. First time it felt *fast*.
-- **Nov 2025** — v3.0 MCP-native rewrite. 16 servers. The architecture that stuck.
-- **Apr 2026** — v3.2 running Kimi K2 + MiMo-V2. 56 keys. Zero downtime in 147 days.
-
-### Real Numbers (Last 90 Days)
-```
-Total tasks routed:     218,400+
-Unique task types:      9 chains active
-Cache savings:          ~$340 equivalent API cost avoided
-Provider switches:      1,847 automatic failovers
-Memory entries:         14,291 semantic embeddings
-Skill extractions:      342 auto-learned patterns
-Uptime:                 99.97% (12 min downtime — Windows Update 😤)
-```
-
-## 💬 Community
-
-> *"I replaced my $200/month Claude Pro + GPT-4 setup with M4STCLAW running on free tiers. Same quality, zero cost."*
-> — [@autonomous_dev](https://github.com/m4stanuj) (creator, production user since v1.0)
-
-> *"The semantic cache alone saved me 40% on API calls within the first week."*
-
-> *"MCP architecture is the future. M4STCLAW proved it before Anthropic even finished the spec."*
-
-### Who Uses M4STCLAW?
-- 🧑‍💻 **Solo developers** replacing expensive SaaS AI subscriptions
-- 🏢 **Small teams** needing multi-model routing without enterprise contracts
-- 🔒 **Security researchers** using the CAI pentest layer for authorized testing
-- 📚 **Students** learning MCP architecture and multi-agent systems
+- **Shell execution**: Binary allow-list + command injection prevention
+- **Pentest scanning**: Strict localhost-only whitelist (configurable via `M4STCLAW_ALLOWED_SCOPE`)
+- **API server**: Listens on `127.0.0.1` only, CORS restricted
+- **Key storage**: Local `.env` only, never logged, masked in dashboard
+- **Browser screenshots**: Filename sanitization against path traversal
+- **DOM manipulation**: Safe `textContent`/`createElement` only (no `innerHTML`)
 
 ## 🗺️ Roadmap
 
 - [x] MCP-native architecture (v3.0)
-- [x] 16 specialized MCP servers
-- [x] Multi-provider routing (56 keys)
-- [x] 3-tier memory system
-- [x] Offensive security integration
-- [x] 5-layer vision pipeline
-- [x] Kimi K2 + MiMo-V2 integration (v3.2)
-- [x] Semantic cache with 58% hit rate
-- [ ] Multi-agent collaboration (OMO protocol) — *in progress*
-- [ ] Web dashboard for real-time monitoring
-- [ ] Plugin marketplace
+- [x] 18 MCP tool endpoints
+- [x] Multi-provider routing with key rotation
+- [x] 3-tier memory system (Working + Episodic + Semantic)
+- [x] Offensive security integration (Nmap/Nuclei/Shodan)
+- [x] Vision pipeline (OCR + Gemini + Ollama)
+- [x] Semantic fuzzy cache (Jaccard similarity)
+- [x] Enterprise web dashboard
+- [x] Composio third-party integration bridge
+- [ ] Multi-agent collaboration protocol
 - [ ] Docker deployment package
+- [ ] Plugin marketplace
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Pull requests welcome.
+
+```bash
+# Run tests
+pip install pytest
+pytest tests/ -v
+```
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
-  <sub>Built with obsession by <a href="https://github.com/m4stanuj">M4ST</a> · Solo Developer · Zero Funding · Infinite Iteration · Since 2023</sub>
+  <sub>Built by <a href="https://github.com/m4stanuj">M4ST</a> · Solo Developer · Zero Funding · Continuous Iteration Since 2023</sub>
 </div>

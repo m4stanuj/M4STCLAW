@@ -97,8 +97,14 @@ def visit_webpage(url: str, click_selector: Optional[str] = None, screenshot_nam
             if title_match:
                 title = title_match.group(1).strip()
 
-            # Basic HTML tag strip (crude placeholder for text extraction)
-            text_content = re.sub(r"<[^>]+>", " ", resp.text)
+            # Clean HTML by stripping script, style blocks, and comments first
+            html = resp.text
+            html = re.sub(r"<script[^>]*>([\s\S]*?)</script>", " ", html, flags=re.I)
+            html = re.sub(r"<style[^>]*>([\s\S]*?)</style>", " ", html, flags=re.I)
+            html = re.sub(r"<!--([\s\S]*?)-->", " ", html)
+
+            # Strip HTML tags and normalize spacing
+            text_content = re.sub(r"<[^>]+>", " ", html)
             text_content = re.sub(r"\s+", " ", text_content).strip()
 
             result["title"] = title

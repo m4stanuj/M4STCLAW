@@ -46,17 +46,33 @@ def format_gemini_messages(messages: List[Dict[str, str]]) -> Dict[str, Any]:
     contents = []
     system_instruction = None
     
+    # Pre-process messages to combine consecutive identical roles
+    processed_messages: List[Dict[str, str]] = []
     for msg in messages:
         role = msg["role"]
         content = msg["content"]
         
         if role == "system":
-            system_instruction = {"parts": [{"text": content}]}
-        elif role == "user":
-            contents.append({"role": "user", "parts": [{"text": content}]})
-        elif role == "assistant":
-            contents.append({"role": "model", "parts": [{"text": content}]})
+            if system_instruction is None:
+                system_instruction = {"parts": [{"text": content}]}
+            else:
+                system_instruction["parts"][0]["text"] += "\n" + content
+            continue
             
+        gemini_role = "user" if role == "user" else "model"
+        
+        if processed_messages and processed_messages[-1]["role"] == gemini_role:
+            processed_messages[-1]["content"] += "\n\n" + content
+        else:
+            processed_messages.append({"role": gemini_role, "content": content})
+            
+    for msg in processed_messages:
+        contents.append({"role": msg["role"], "parts": [{"text": msg["content"]}]})
+        
+    # Ensure contents list is not empty
+    if not contents:
+        contents.append({"role": "user", "parts": [{"text": "Hello"}]})
+        
     payload: Dict[str, Any] = {"contents": contents}
     if system_instruction:
         payload["systemInstruction"] = system_instruction

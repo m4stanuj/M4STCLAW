@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="m4stclaw",
-    version="3.3.0",
+    version="3.4.0",
     description="Autonomous AI Mesh Network — Multi-provider LLM routing with MCP integration",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
@@ -42,7 +42,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "m4stclaw=start:main",
+            "m4stclaw=m4stclaw.start:main",
         ],
     },
     classifiers=[

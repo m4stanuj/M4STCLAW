@@ -59,7 +59,31 @@ def llm_query(prompt: str, task: str = "speed", use_cache: bool = True) -> str:
         if cached:
             return cached
             
-    response = fallback.chat_complete([{"role": "user", "content": prompt}], task=task)
+    # Retrieve relevant semantic memories (T3)
+    memories = memory.query_semantic_memory(prompt, limit=3)
+    messages = []
+    
+    if memories:
+        context_blocks = []
+        for mem in memories:
+            text = mem.get("text", "")
+            meta = mem.get("metadata", {})
+            source = meta.get("source", "past interaction")
+            context_blocks.append(f"- Memory (Source: {source}): {text}")
+            
+        mem_preamble = (
+            "You have access to the following relevant memories from past interactions:\n"
+            + "\n".join(context_blocks) + "\n\n"
+            "Incorporate this context if relevant to help answer the user query.\n\n"
+        )
+        messages = [
+            {"role": "system", "content": "You are M4STCLAW, a powerful agent mesh network framework. Use retrieved memories to provide continuity across sessions."},
+            {"role": "user", "content": mem_preamble + prompt}
+        ]
+    else:
+        messages = [{"role": "user", "content": prompt}]
+        
+    response = fallback.chat_complete(messages, task=task)
     
     if use_cache and not response.startswith("ERROR:"):
         cache.set_cached_response(prompt, response)

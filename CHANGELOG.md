@@ -2,6 +2,18 @@
 
 All notable changes to M4STCLAW are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.4.0] — 2026-06-01
+
+### Added
+- **Semantic Memory Context Injection**: Modified chat completion loops (`api_execute` in `app_server.py` and `llm_query` MCP tool) to automatically query and inject relevant facts from T3 Semantic Memory into the LLM system/user prompts, establishing a functional long-term retrieval loop.
+
+### Fixed
+- **CLI Entrypoint Bug**: Moved system startup logic to distributed module `m4stclaw/start.py` and configured setups to link global command executions successfully. Replaced root `start.py` with a lightweight wrapper shim.
+- **Smart Keys Dynamic Reloading**: Updated `config.py` to reload smart keys from dynamically configured environment variables upon querying, ensuring instant runtime updates from the dashboard key manager apply without requiring backend restarts.
+- **Garbage Removal in Fallback Crawler**: Hardened `browser_handler.py` fallback crawler to strip `<script>`, `<style>` blocks, and comments before tag removal to prevent JS/CSS noise from polluting LLM contexts.
+- **IPv6 Target Scope Parsing**: Enhanced `pentest_handler.py` whitelist validation to strip square brackets `[]` from target host strings, enabling scans on IPv6 loopback addresses (e.g. `[::1]`).
+- **Gemini Alternating Message Constraint**: Updated `fallback.py` to merge adjacent consecutive chat history messages sharing identical roles, satisfying Gemini API alternating user/model requirements.
+
 ## [3.3.0] — 2026-06-01
 
 ### Added

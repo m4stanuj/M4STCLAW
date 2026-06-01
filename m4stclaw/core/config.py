@@ -111,6 +111,11 @@ def get_keys_for_provider(provider_name: str) -> List[str]:
     """Retrieve explicit keys and detected smart keys for a provider."""
     prefix = provider_name.upper()
     explicit = _load_keys(prefix)
+    
+    # Reload smart keys dynamically to ensure new keys set via API are instantly detected
+    global _smart_map
+    _smart_map = _load_smart_keys()
+    
     smart = _smart_map.get(prefix, [])
     merged = list(dict.fromkeys(explicit + smart))
     return merged if merged else ["PLACEHOLDER_NO_KEY"]

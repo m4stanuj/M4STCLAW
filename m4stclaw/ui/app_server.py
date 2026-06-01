@@ -28,7 +28,7 @@ from m4stclaw.servers.server_definitions import mcp
 log = logging.getLogger("m4stclaw.ui.server")
 
 # Define app
-app = FastAPI(title="M4STCLAW Dashboard Server", version="3.3.0")
+app = FastAPI(title="M4STCLAW Dashboard Server", version="3.4.0")
 
 # CORS constraints
 app.add_middleware(
@@ -71,8 +71,32 @@ async def api_execute(req: ExecuteRequest) -> Dict[str, Any]:
         task = router.classify_task(req.prompt)
         
     try:
-        # Call completion router
-        response = fallback.chat_complete([{"role": "user", "content": req.prompt}], task=task)
+        # Retrieve relevant semantic memories (T3)
+        memories = memory.query_semantic_memory(req.prompt, limit=3)
+        messages = []
+        
+        if memories:
+            context_blocks = []
+            for mem in memories:
+                text = mem.get("text", "")
+                meta = mem.get("metadata", {})
+                source = meta.get("source", "past interaction")
+                context_blocks.append(f"- Memory (Source: {source}): {text}")
+                
+            mem_preamble = (
+                "You have access to the following relevant memories from past interactions:\n"
+                + "\n".join(context_blocks) + "\n\n"
+                "Incorporate this context if relevant to help answer the user query.\n\n"
+            )
+            messages = [
+                {"role": "system", "content": "You are M4STCLAW, a powerful agent mesh network framework. Use retrieved memories to provide continuity across sessions."},
+                {"role": "user", "content": mem_preamble + req.prompt}
+            ]
+        else:
+            messages = [{"role": "user", "content": req.prompt}]
+
+        # Call completion router with memory context
+        response = fallback.chat_complete(messages, task=task)
         
         # Parse output for visual updates
         preview_type = "text"

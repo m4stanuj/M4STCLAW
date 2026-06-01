@@ -18,8 +18,13 @@ ALLOWED_BINARIES = {
     "nmap", "nuclei", "shodan", "echo", "dir", "ls", "pwd"
 }
 
-# Restrict to scratch sandbox directory
-SANDBOX_DIR = os.path.abspath("C:/Users/Administrator/.gemini/antigravity-ide/scratch")
+# Restrict to scratch sandbox directory (configurable via env)
+DEFAULT_SANDBOX = os.path.abspath(os.path.expanduser("~/.gemini/antigravity-ide/scratch"))
+if not os.path.exists(DEFAULT_SANDBOX):
+    # Fallback to project root or current working directory if default doesn't exist
+    DEFAULT_SANDBOX = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
+SANDBOX_DIR = os.path.abspath(os.environ.get("M4STCLAW_SANDBOX", DEFAULT_SANDBOX))
 
 def is_command_safe(cmd_str: str) -> Tuple[bool, str]:
     """Validates the first word of the command against our safe allow-list."""

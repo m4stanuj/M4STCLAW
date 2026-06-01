@@ -76,7 +76,7 @@ def setup_config_directory():
             log.info(f"Initialized empty .env configurations at: {env_file}")
 
 def main():
-    log.info("Initializing M4STCLAW v3.2.0...")
+    log.info("Initializing M4STCLAW v3.3.0...")
     
     if not check_dependencies():
         sys.exit(1)
@@ -88,15 +88,16 @@ def main():
     
     log.info("Starting M4STCLAW App Server on http://localhost:8000")
     print("\n" + "="*80)
-    print("  M4STCLAW v3.2.0 Dashboard is running locally.")
+    print("  M4STCLAW v3.3.0 Dashboard is running locally.")
     print("  - Web Dashboard:     http://localhost:8000")
     print("  - Unified MCP HTTP:  http://localhost:8000/mcp")
     print("="*80 + "\n")
     
-    # Listen strictly on loopback address (127.0.0.1) for secure deployment
+    # Listen strictly on loopback address (127.0.0.1) for secure deployment, allow overrides for containerization
+    host = os.environ.get("M4STCLAW_HOST", "127.0.0.1")
     uvicorn.run(
         "m4stclaw.ui.app_server:app",
-        host="127.0.0.1",
+        host=host,
         port=8000,
         log_level="warning",
         reload=False

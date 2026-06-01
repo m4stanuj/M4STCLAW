@@ -28,7 +28,7 @@ from m4stclaw.servers.server_definitions import mcp
 log = logging.getLogger("m4stclaw.ui.server")
 
 # Define app
-app = FastAPI(title="M4STCLAW Dashboard Server", version="3.2.0")
+app = FastAPI(title="M4STCLAW Dashboard Server", version="3.3.0")
 
 # CORS constraints
 app.add_middleware(

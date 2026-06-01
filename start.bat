@@ -1,7 +1,7 @@
 @echo off
 title M4STCLAW Core Server Launcher
 echo ===================================================================
-echo             M4STCLAW v3.2.0 — Autonomous Mesh Network
+echo             M4STCLAW v3.3.0 — Autonomous Mesh Network
 echo ===================================================================
 echo.
 echo Launching local python server environment...

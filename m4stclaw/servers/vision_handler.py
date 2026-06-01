@@ -14,7 +14,7 @@ from PIL import ImageGrab
 
 log = logging.getLogger("m4stclaw.servers.vision")
 
-SCREENSHOT_DIR = Path("C:/Users/Administrator/.gemini/antigravity-ide/scratch/screenshots")
+SCREENSHOT_DIR = Path(os.path.expanduser("~/.config/m4stclaw/screenshots"))
 
 # OCR engine availability
 _ocr_available = False

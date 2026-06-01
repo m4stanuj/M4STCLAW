@@ -2,6 +2,18 @@
 
 All notable changes to M4STCLAW are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.3.0] — 2026-06-01
+
+### Added
+- **Docker Support**: Containerized environment with `Dockerfile` and `docker-compose.yml` defining automated mounts and environment variable overrides.
+- **CI/CD Pipeline**: GitHub Actions integration executing pytest test suites on Python 3.11 and 3.12 automatically.
+- **pyproject.toml Configuration**: Modern Python package management standard complying with PEP 621, listing build-system and dependencies.
+
+### Fixed
+- Portable directory handling in `vision_handler.py` (migrated hardcoded Windows paths to home configurations folder).
+- Portable directory handling in `shell_handler.py` (added dynamic `M4STCLAW_SANDBOX` environment configuration).
+- Configurable binding host in `start.py` launcher enabling secure external exposure inside containerized settings.
+
 ## [3.2.1] — 2026-04-18
 
 ### Fixed

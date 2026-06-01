@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  m4stclaw:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - m4stclaw-data:/root/.config/m4stclaw
+      - ./sandbox:/app/sandbox
+    environment:
+      - M4STCLAW_HOST=0.0.0.0
+      - M4STCLAW_SANDBOX=/app/sandbox
+    restart: unless-stopped
+
+volumes:
+  m4stclaw-data:

@@ -194,9 +194,10 @@ document.addEventListener("DOMContentLoaded", () => {
             drawDAG(task, "router");
             addLogLine("route", "Routing to chain: " + task.toUpperCase());
 
-            // Query backend
+            // Query backend (route to mesh API if "agent" is selected)
+            const endpoint = (task === "agent") ? "/api/mesh/execute" : "/api/execute";
             try {
-                const response = await fetch("/api/execute", {
+                const response = await fetch(endpoint, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ prompt: prompt, task: task })
@@ -207,6 +208,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.status === "success") {
                     addChatBubble("assistant", data.response);
                     addLogLine("success", "Response received in " + data.duration_ms + "ms.");
+                    
+                    // Display agent execution logs in the activity log
+                    if (data.logs && Array.isArray(data.logs)) {
+                        data.logs.forEach(logLine => {
+                            addLogLine(logLine.type, logLine.text);
+                        });
+                    }
 
                     // Render preview if applicable
                     if (data.preview_type === "diff" && data.preview_content) {

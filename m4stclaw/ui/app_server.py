@@ -21,6 +21,7 @@ import m4stclaw.core.fallback as fallback
 import m4stclaw.core.cache as cache
 import m4stclaw.core.memory as memory
 from m4stclaw.core.config import CONFIG_DIR, get_cooldowns_status
+from m4stclaw.core.mesh import MeshOrchestrator
 
 # Unified FastMCP Server definition
 from m4stclaw.servers.server_definitions import mcp
@@ -28,7 +29,7 @@ from m4stclaw.servers.server_definitions import mcp
 log = logging.getLogger("m4stclaw.ui.server")
 
 # Define app
-app = FastAPI(title="M4STCLAW Dashboard Server", version="3.4.0")
+app = FastAPI(title="M4STCLAW Dashboard Server", version="3.5.0")
 
 # CORS constraints
 app.add_middleware(
@@ -127,6 +128,50 @@ async def api_execute(req: ExecuteRequest) -> Dict[str, Any]:
     except Exception as e:
         memory.add_episodic_log(task, req.prompt, str(e), False)
         raise HTTPException(status_code=500, detail=f"Execution error: {e}")
+
+@app.post("/api/mesh/execute")
+async def api_mesh_execute(req: ExecuteRequest) -> Dict[str, Any]:
+    """Execute multi-agent collaboration mesh task."""
+    global _total_costs, _throughput_tps
+    start = time.time()
+    
+    logs_accumulator = []
+    
+    def log_collector(agent: str, message: str):
+        log_type = "info"
+        if agent == "system":
+            log_type = "system"
+        elif agent == "coder":
+            log_type = "route"
+        elif agent == "auditor":
+            log_type = "warning"
+        elif agent == "tester":
+            log_type = "success"
+        logs_accumulator.append({"type": log_type, "text": f"[{agent.upper()}] {message}"})
+        
+    orchestrator = MeshOrchestrator(log_callback=log_collector)
+    
+    try:
+        # Run mesh loop
+        result = orchestrator.run_mesh_task(req.prompt)
+        duration_ms = int((time.time() - start) * 1000)
+        
+        # Accumulate metrics
+        _total_costs += 0.00075 * result.get("rounds_run", 1)
+        _throughput_tps = int(len(result.get("final_code", "").split()) / max(1, duration_ms/1000.0))
+        
+        # Record episodic logs (T2)
+        memory.add_episodic_log("agent", req.prompt, result["final_summary"], result["success"])
+        
+        return {
+            "status": "success",
+            "response": result["final_summary"],
+            "logs": logs_accumulator,
+            "duration_ms": duration_ms
+        }
+    except Exception as e:
+        log.error(f"Mesh execution failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Mesh execution failed: {e}")
 
 @app.post("/api/keys")
 async def api_keys_commit(req: KeysCommitRequest) -> Dict[str, Any]:

@@ -14,6 +14,7 @@ import m4stclaw.core.router as router
 import m4stclaw.core.fallback as fallback
 import m4stclaw.core.cache as cache
 import m4stclaw.core.memory as memory
+from m4stclaw.core.mesh import MeshOrchestrator
 
 # MCP server handlers
 import m4stclaw.servers.shell_handler as shell
@@ -192,4 +193,11 @@ def composio_action(action_name: str, parameters_json: str) -> str:
         return f"ERROR: Invalid parameters JSON: {e}"
         
     res = composio.run_composio_action(action_name, params)
+    return json.dumps(res, indent=2)
+
+@mcp.tool(name="mesh_run")
+def mesh_run(prompt: str) -> str:
+    """Executes the multi-agent mesh loop to generate, audit, and test a solution."""
+    orchestrator = MeshOrchestrator()
+    res = orchestrator.run_mesh_task(prompt)
     return json.dumps(res, indent=2)

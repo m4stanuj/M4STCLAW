@@ -2,6 +2,13 @@
 
 All notable changes to M4STCLAW are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.5.0] — 2026-06-01
+
+### Added
+- **Multi-Agent Mesh Orchestration Engine**: Implemented `m4stclaw/core/mesh.py` establishing concurrent collaboration workflows between three specialized agents (Coder, Auditor, and Tester) working statefully in feedback-based loops to build, audit, and test programming solutions.
+- **Dynamic Mesh Endpoint & MCP Tool**: Mounted `/api/mesh/execute` inside `app_server.py` and registered the `mesh_run` FastMCP tool inside `server_definitions.py` to support agent-collaboration runs from the GUI and MCP client paths.
+- **Activity Log Collaboration Trace**: Integrated logs callback trace in the `/api/mesh/execute` endpoint, returning detailed execution logs of each agent which are printed directly in the browser's Activity Log console.
+
 ## [3.4.0] — 2026-06-01
 
 ### Added

@@ -76,7 +76,7 @@ def setup_config_directory():
             log.info(f"Initialized empty .env configurations at: {env_file}")
 
 def main():
-    log.info("Initializing M4STCLAW v3.4.0...")
+    log.info("Initializing M4STCLAW v3.5.0...")
     
     if not check_dependencies():
         sys.exit(1)
@@ -88,7 +88,7 @@ def main():
     
     log.info("Starting M4STCLAW App Server on http://localhost:8000")
     print("\n" + "="*80)
-    print("  M4STCLAW v3.4.0 Dashboard is running locally.")
+    print("  M4STCLAW v3.5.0 Dashboard is running locally.")
     print("  - Web Dashboard:     http://localhost:8000")
     print("  - Unified MCP HTTP:  http://localhost:8000/mcp")
     print("="*80 + "\n")

@@ -1,0 +1,10 @@
+{
+  "name": "m4stclaw",
+  "version": "3.6.0",
+  "description": "M4STCLAW — Unified MCP mesh server with routing, memory, shell, browser, vision, pentest, and multi-agent orchestration. Start with: python start.py",
+  "author": "M4ST",
+  "license": "MIT",
+  "repository": "https://github.com/m4stanuj/M4STCLAW",
+  "commands": {},
+  "agents": {}
+}

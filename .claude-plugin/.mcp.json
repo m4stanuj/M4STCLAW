@@ -2,7 +2,7 @@
   "mcpServers": {
     "m4stclaw-mesh": {
       "type": "remote",
-      "url": "http://localhost:8000/mcp",
+      "url": "http://localhost:8000/mcp/sse",
       "description": "M4STCLAW unified mesh server — routing, memory, shell, browser, vision, pentest, multi-agent. Start with: python start.py"
     }
   }

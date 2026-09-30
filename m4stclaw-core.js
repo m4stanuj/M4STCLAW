@@ -6,15 +6,38 @@
  * Integrated with: Scrapling, LiteLLM Router, Mem0, FastMCP, NVIDIA NIM H100
  */
 
+const fs = require('fs');
+const path = require('path');
 const http = require('http');
 const https = require('https');
 const readline = require('readline');
 
-const NVIDIA_KEY = process.env.NVIDIA_API_KEY || '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';
-const N8N_TUNNEL = 'https://throughout-charlie-routers-keen.trycloudflare.com';
-const LIBRECHAT_TUNNEL = 'https://automation-maximize-ceremony-pointer.trycloudflare.com';
-const SCRAPLING_TUNNEL = 'https://lucky-contribution-scholarship-composite.trycloudflare.com';
-const LOCAL_BRIDGE = 'http://127.0.0.1:3090';
+function getSecret(keyName) {
+  if (process.env[keyName]) return process.env[keyName];
+  const candidates = [
+    path.join(process.cwd(), '.env'),
+    path.join(__dirname, '.env'),
+    path.join(process.env.USERPROFILE || '', '.m4stclaw', '.env')
+  ];
+  for (const envPath of candidates) {
+    try {
+      if (fs.existsSync(envPath)) {
+        const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+        for (const line of lines) {
+          const match = line.match(new RegExp(`^${keyName}=(.*)$`));
+          if (match) return match[1].trim().replace(/^['"]|['"]$/g, '');
+        }
+      }
+    } catch (_) {}
+  }
+  return '';
+}
+
+const NVIDIA_KEY = getSecret('NVIDIA_API_KEY');
+const N8N_TUNNEL = process.env.N8N_TUNNEL || 'https://throughout-charlie-routers-keen.trycloudflare.com';
+const LIBRECHAT_TUNNEL = process.env.LIBRECHAT_TUNNEL || 'https://automation-maximize-ceremony-pointer.trycloudflare.com';
+const SCRAPLING_TUNNEL = process.env.SCRAPLING_TUNNEL || 'https://lucky-contribution-scholarship-composite.trycloudflare.com';
+const LOCAL_BRIDGE = process.env.LOCAL_BRIDGE || 'http://127.0.0.1:3090';
 
 let currentModel = 'deepseek-ai/deepseek-v4.1-flash';
 

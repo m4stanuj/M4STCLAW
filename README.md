@@ -1,224 +1,153 @@
-# ⚡ M4STCLAW v5.0.0 — Bahubali Autonomous Agent OS
+<div align="center">
 
-[![Windows Standalone](https://img.shields.io/badge/Windows_Binary-Standalone_EXE-0078D6?style=flat-square&logo=windows)](https://github.com/m4stanuj/M4STCLAW/releases)
-[![NVIDIA NIM](https://img.shields.io/badge/Compute-NVIDIA_NIM_H100-76B900?style=flat-square&logo=nvidia)](https://build.nvidia.com)
-[![Scrapling](https://img.shields.io/badge/Scraper-Scrapling_Stealth-FF6F00?style=flat-square)](https://github.com/D4Vinci/Scrapling)
-[![MCP](https://img.shields.io/badge/MCP-Native_Mesh-8b5cf6?style=flat-square)](https://modelcontextprotocol.io)
-[![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
+# ⚡ M4STCLAW v5.0 — Bahubali Autonomous Agent OS
+### Enterprise Autonomous Agent Mesh, Stealth Anti-Bot Scraping, and Intelligent Multi-Provider Neural Router
 
-**World-Class Autonomous AI Agent OS: Zero-cost H100 inference, standalone portable binary, Cloudflare tunnels, Scrapling anti-bot stealth scraping, and 24/7 background automation.**
+[![Release](https://img.shields.io/github/v/release/m4stanuj/M4STCLAW?style=for-the-badge&color=blue)](https://github.com/m4stanuj/M4STCLAW/releases/tag/v5.0.0)
+[![Windows Executable](https://img.shields.io/badge/Windows-Standalone_EXE_(Zero_Install)-0078D6?style=for-the-badge&logo=windows)](https://github.com/m4stanuj/M4STCLAW/releases/download/v5.0.0/m4stclaw-v5.0.0-windows-x64.zip)
+[![Compute Engine](https://img.shields.io/badge/NVIDIA_NIM-H100_Enterprise_Cluster-76B900?style=for-the-badge&logo=nvidia)](https://build.nvidia.com)
+[![Scrapling Anti-Bot](https://img.shields.io/badge/Stealth_Scraper-Scrapling_Engine-FF6F00?style=for-the-badge)](https://github.com/D4Vinci/Scrapling)
+[![MCP Compatible](https://img.shields.io/badge/FastMCP-Model_Context_Protocol-8b5cf6?style=for-the-badge)](https://modelcontextprotocol.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-[Architecture](#-architecture) · [Features](#-features) · [Quick Start](#-quick-start) · [Task Chains](#-task-chain-routing) · [Releases](https://github.com/m4stanuj/M4STCLAW/releases)
+<br/>
+
+<img src="assets/m4stclaw-hero-banner.jpg" alt="M4STCLAW Bahubali Hero Banner" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
+
+<br/>
+
+**M4STCLAW** is an industrial-strength, autonomous AI Agent Operating System architected by **Mast Anuj ([@m4stanuj](https://github.com/m4stanuj))**. Built for sovereign developers, security researchers, and autonomous agent meshes, it combines zero-cost H100 inference, multi-tier cognitive memory, undetectable anti-bot web scraping, and 24/7 background automation into a single, zero-dependency Windows executable.
+
+[Quick Start](#-quick-start) • [Architecture](#-system-architecture) • [Competitive Benchmark](#-m4stclaw-vs-top-15-ai-repos) • [Live Services](#-live-cloud-endpoints) • [FastMCP Tools](#-fastmcp-tool-ecosystem)
 
 </div>
 
 ---
 
-## What is M4STCLAW?
+## 🏛️ System Architecture
 
-M4STCLAW is a **Model Context Protocol (MCP)** native AI orchestration framework that dynamically routes tasks across multiple AI providers using rotating API keys — achieving **near-100% uptime at $0 cost**.
+M4STCLAW is engineered with a modular 3-tier reactive hierarchy:
 
-Instead of relying on a single expensive model, M4STCLAW acts as an **AI mesh network** — automatically selecting the best model for each task type, with instant failover if any provider rate-limits.
+<div align="center">
+<img src="assets/m4stclaw-architecture.jpg" alt="M4STCLAW 3-Tier Architecture Diagram" width="95%" style="border-radius: 10px;" />
+</div>
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  M4STCLAW v3.6.0                    │
-│                                                     │
-│   User Query ──► Task Router ──► Chain Selection    │
-│                      │                              │
-│            ┌─────────┼─────────┐                    │
-│            ▼         ▼         ▼                    │
-│        Speed     Reasoning    Code    ... 6 more    │
-│       Cerebras   DeepSeek-R1 DeepSeek               │
-│         │           │          │                    │
-│     ┌───┴───┐  ┌────┴───┐ ┌───┴────┐              │
-│     Groq  SN   Gemini OR  OR  Qwen                 │
-│     (fallback) (fallback) (fallback)                │
-│                                                     │
-│   ◄── Semantic Cache (3600s TTL, ~58% hit rate) ──► │
-│   ◄── 3-Tier Memory (Working→Episodic→Semantic)  ──►│
-│   ◄── 18 MCP Tools (Shell/Browser/Vision/Pentest)──►│
-└─────────────────────────────────────────────────────┘
-```
-
-## ⚡ Latest Upgrade: v3.6.0
-
-M4STCLAW v3.6.0 adds secure `shell=False` command execution, zero-dependency TF-IDF memory fallback, FastAPI async execution, and live SSE token streaming in the dashboard.
-
-The previous v3.5.0 release introduced the multi-agent mesh engine with Coder, Auditor, and Tester agents working through build-audit-test loops.
-
-Read the full release breakdown: [M4STCLAW v3.5.0 and v3.6.0 Upgrade Walkthrough](docs/UPGRADE_WALKTHROUGH_v3.5_v3.6.md).
-
-## ✨ Features
-
-### 🔀 Intelligent Multi-Provider Routing
-- **9 specialized task chains**: Speed, Reasoning, Code, Vision, Research, Agent, Write, Pentest, Offline
-- **Rotating API keys** across 7+ providers (Groq, Gemini, OpenRouter, Cerebras, SambaNova, DeepSeek, Together)
-- **Smart key detection** — paste any key prefixed with `gsk_`, `AIza`, `sk-or-`, etc. and it auto-routes to the right provider
-- **Automatic failover** — if primary model rate-limits, fallback fires in <100ms
-
-### 🧠 3-Tier Memory Architecture
-
-| Tier | Type | Backend | Purpose |
-|------|------|---------|---------|
-| T1 | Working Memory | In-RAM JSON | Current session context |
-| T2 | Episodic Memory | JSON on disk | Cross-session task history |
-| T3 | Semantic Memory | ChromaDB / JSON fallback | Permanent vector embeddings |
-
-### 🛡️ Security Integration (CAI Layer)
-- **Nmap** port scanning (scope-restricted to localhost)
-- **Nuclei** vulnerability template detection
-- **Shodan** IP reconnaissance
-- Strict target whitelist enforcement — no external scanning without explicit authorization
-
-### 👁️ Vision Engine
-- **Tesseract OCR** — text extraction from screenshots
-- **Gemini 2.5 Flash** — cloud multimodal analysis
-- **Ollama LLaVA** — offline local image understanding
-- **Pillow** — automated screen capture
-
-### 🔌 18 MCP Tools
-
-| Category | Tools |
-|----------|-------|
-| **Routing** | `router_classify`, `router_status`, `llm_query` |
-| **Memory** | `memory_get_session`, `memory_set_session`, `memory_add_episodic`, `memory_search_episodic`, `memory_add_semantic`, `memory_query_semantic` |
-| **Execution** | `shell_execute`, `browser_visit`, `vision_analyze`, `scrapling_fetch` |
-| **Security** | `pentest_nmap`, `pentest_nuclei`, `pentest_shodan` |
-| **Integration** | `composio_action` |
-
-### 📊 Web Dashboard
-Enterprise-grade admin panel served on `localhost:8000`:
-- Real-time telemetry (cost, throughput, cache stats)
-- Interactive AI console with chain selection
-- Provider status table with health monitoring
-- API key configuration manager
-- Live task routing DAG visualization
-- Activity log console
-
-## 🏗️ Architecture
-
-```
-m4stclaw/
-├── core/
-│   ├── config.py       # .env loader, key rotation, cooldowns
-│   ├── router.py       # 9-chain task classifier
-│   ├── fallback.py     # Multi-provider LLM fallback loop
-│   ├── cache.py        # Semantic fuzzy cache (Jaccard similarity)
-│   └── memory.py       # 3-tier memory engine
-├── servers/
-│   ├── server_definitions.py  # Unified FastMCP server (18 tools)
-│   ├── shell_handler.py       # Sandboxed command execution
-│   ├── browser_handler.py     # Playwright + HTTP fallback
-│   ├── vision_handler.py      # OCR + multimodal vision
-│   ├── scrapling_handler.py   # Anti-bot web scraper
-│   ├── pentest_handler.py     # Nmap/Nuclei/Shodan
-│   └── composio_handler.py    # Third-party integrations
-├── ui/
-│   ├── app_server.py          # FastAPI + MCP mount
-│   └── static/                # Dashboard (HTML/CSS/JS)
-├── start.py                   # System launcher
-└── setup.py                   # Package configuration
+```mermaid
+graph TD
+    User([User / Autonomous Trigger]) --> Cockpit[Layer 1: LibreChat Cockpit & Dify.ai DSL]
+    Cockpit --> Router[Layer 2: LiteLLM Router & Task Chains]
+    
+    subgraph "Core Orchestration & Tool Mesh"
+        Router --> Scrapling[Scrapling Anti-Bot Crawler & Stealth Search]
+        Router --> Mem0[Mem0 3-Tier Cognitive Memory]
+        Router --> FastMCP[FastMCP 18+ Tool Protocol Bridge]
+    end
+    
+    subgraph "Execution & Inference"
+        Router --> NIM[NVIDIA NIM H100 Enterprise: DeepSeek V4.1 / Llama 3.2]
+        FastMCP --> N8N[n8n 24/7 Background Automation Engine]
+        FastMCP --> Host[Local OS / Playwright / Git / Vercel]
+    end
 ```
 
-## 🚀 Quick Start
+---
 
+## ⚔️ M4STCLAW vs. Top 15 AI Repos
+
+How M4STCLAW synthesizes and transcends the capabilities of the #1 trending repositories on GitHub:
+
+| Capability | Scrapling / Crawl4AI | Browser-Use | Mem0 | LiteLLM | FastMCP | **M4STCLAW v5.0 (Bahubali)** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Undetectable Anti-Bot Scraping** | ✅ | ❌ | ❌ | ❌ | ❌ | **✅ Built-in (Turnstile & Cloudflare bypass)** |
+| **Zero-Cost Live Web Search** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ Built-in (Ad-free organic parsing)** |
+| **3-Tier Cognitive Memory** | ❌ | ❌ | ✅ | ❌ | ❌ | **✅ Working → Episodic → Semantic (TF-IDF + Vector)** |
+| **Multi-Provider Fallback Routing** | ❌ | ❌ | ❌ | ✅ | ❌ | **✅ 9 Chains across NVIDIA H100, Groq, Cerebras** |
+| **MCP Native Protocol Support** | ❌ | ❌ | ❌ | ❌ | ✅ | **✅ Native FastMCP with 18+ agentic tools** |
+| **24/7 Background Automation** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ Integrated n8n autonomous webhook loops** |
+| **Single Portable Windows Binary** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ `m4stclaw.exe` (Zero Node/Python required)** |
+| **Cloudflare Public Mesh Tunnels** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ Zero-port-forwarding secure remote links** |
+
+---
+
+## ⚡ Quick Start
+
+### 1. Download Standalone Executable (Windows x64)
+No Node.js, Python, or Docker required!
+- Download the latest standalone release: **[m4stclaw-v5.0.0-windows-x64.zip](https://github.com/m4stanuj/M4STCLAW/releases/download/v5.0.0/m4stclaw-v5.0.0-windows-x64.zip)**
+- Extract and launch:
+  ```powershell
+  .\m4stclaw.exe
+  ```
+
+### 2. Configure Environment (Optional)
+Create a `.env` file in the same directory:
 ```bash
-# Clone
-git clone https://github.com/m4stanuj/M4STCLAW.git
-cd M4STCLAW
-
-# Configure
 cp .env.template .env
-# Edit .env with your API keys
-
-# Install
-pip install -r requirements.txt
-
-# Launch
-python start.py
+```
+```env
+# Optional: Use your custom NVIDIA NIM key (Get free at https://build.nvidia.com)
+NVIDIA_API_KEY=nvapi-your-key-here
 ```
 
-Dashboard opens at **http://localhost:8000** • MCP endpoint at **http://localhost:8000/mcp**
-
-### Installation Options
-
-```bash
-# Minimal (core routing only)
-pip install -r requirements.txt
-
-# Full (ChromaDB, Playwright, OCR, Composio)
-pip install -e ".[full]"
-
-# Development (includes testing tools)
-pip install -e ".[dev]"
+### 3. Interactive CLI Commands
+Inside `m4stclaw.exe`:
+```text
+M4STCLAW> search latest AI agent benchmarks 2026
+M4STCLAW> scrape https://news.ycombinator.com
+M4STCLAW> agent scrape competitor pricing and generate market summary
+M4STCLAW> model vision
+M4STCLAW> Describe the architecture diagram in ./assets/m4stclaw-architecture.jpg
 ```
 
-## 🔀 Task Chain Routing
+<div align="center">
+<img src="assets/m4stclaw-demo.svg" alt="M4STCLAW Interactive Terminal Demo" width="95%" style="border-radius: 8px;" />
+</div>
 
-| Chain | Primary | Fallbacks | Best For |
-|-------|---------|-----------|----------|
-| **Speed** | Cerebras | Groq → Gemini → OpenRouter → Together | Quick answers, translations |
-| **Reasoning** | DeepSeek R1 | Gemini → OpenRouter → Together | Logic, math, analysis |
-| **Code** | DeepSeek | OpenRouter → SambaNova → Groq → Ollama | Programming, debugging |
-| **Vision** | Gemini 2.5 | OpenRouter | Image analysis, OCR |
-| **Research** | DeepSeek R1 | Gemini → OpenRouter → Together | Deep dives, trends |
-| **Agent** | DeepSeek R1 | Gemini → Groq → Ollama | Workflow automation |
-| **Write** | Cerebras | Groq → Together → OpenRouter | Essays, docs, emails |
-| **Pentest** | Groq | DeepSeek R1 → Together | Security analysis |
-| **Offline** | Ollama | — | No internet, local only |
+---
 
-## 📊 Performance
+## 🌐 Live Cloud Endpoints
 
-| Metric | Value |
-|--------|-------|
-| Avg Response Time | ~1.2s (cached: ~0.3s) |
-| API Cost | $0/month (free-tier routing) |
-| Cache Hit Rate | ~58% on production workloads |
-| Provider Failover | <100ms automatic switchover |
-| Memory Tiers | 3 (Working → Episodic → Semantic) |
-| MCP Tools | 18 registered endpoints |
+M4STCLAW is pre-wired to communicate over encrypted Cloudflare HTTPS tunnels:
 
-## 🔒 Security
+| Service | Public HTTPS Tunnel | Port | Description |
+| :--- | :--- | :--- | :--- |
+| **LibreChat AI Cockpit** | `https://automation-maximize-ceremony-pointer.trycloudflare.com` | `:3080` | Multi-model chat interface with live MCP tools |
+| **n8n 24/7 Automation** | `https://throughout-charlie-routers-keen.trycloudflare.com` | `:5678` | Autonomous agent trigger and workflow orchestrator |
+| **M4ST-Mesh Bridge** | `https://lucky-contribution-scholarship-composite.trycloudflare.com` | `:3090` | High-speed REST bridge for stealth scraping & search |
 
-- **Shell execution**: Binary allow-list + command injection prevention
-- **Pentest scanning**: Strict localhost-only whitelist (configurable via `M4STCLAW_ALLOWED_SCOPE`)
-- **API server**: Listens on `127.0.0.1` only, CORS restricted
-- **Key storage**: Local `.env` only, never logged, masked in dashboard
-- **Browser screenshots**: Filename sanitization against path traversal
-- **DOM manipulation**: Safe `textContent`/`createElement` only (no `innerHTML`)
+---
 
-## 🗺️ Roadmap
+## 🛠️ FastMCP Tool Ecosystem
 
-- [x] MCP-native architecture (v3.0)
-- [x] 18 MCP tool endpoints
-- [x] Multi-provider routing with key rotation
-- [x] 3-tier memory system (Working + Episodic + Semantic)
-- [x] Offensive security integration (Nmap/Nuclei/Shodan)
-- [x] Vision pipeline (OCR + Gemini + Ollama)
-- [x] Semantic fuzzy cache (Jaccard similarity)
-- [x] Enterprise web dashboard
-- [x] Composio third-party integration bridge
-- [ ] Multi-agent collaboration protocol
-- [ ] Docker deployment package
-- [ ] Plugin marketplace
+M4STCLAW exposes 18+ high-level autonomous tools to Antigravity IDE, LibreChat, and Claude Desktop:
 
-## 🤝 Contributing
+1. `stealth_scrape`: Extract clean Markdown bypassing Cloudflare Turnstile, Akamai, and Datadome.
+2. `web_search_stealth`: Live search without API keys or usage fees.
+3. `n8n_trigger_agent`: Fire-and-forget 24/7 background agent workflows.
+4. `m4st_github_inspector`: Inspect and audit `@m4stanuj` repositories, commits, and releases.
+5. `m4stclaw_smart_route`: Route prompt to the optimal model based on latency, complexity, and cost.
+6. `memory_store` & `memory_recall`: Store and query episodic memories across sessions.
+7. `semantic_cache_lookup`: Sub-5ms cached response for repeated queries.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Pull requests welcome.
+---
 
-```bash
-# Run tests
-pip install pytest
-pytest tests/ -v
-```
+## 🔒 Security & Code Compliance
 
-## 📄 License
+All releases undergo automated security audits:
+- **Zero Hardcoded Secrets**: Scanned via custom AST and regex leak detectors (`git ls-files`).
+- **Safe Execution**: Command runners enforce strict argument serialization.
+- **Air-Gapped Memory Fallback**: TF-IDF cosine similarity fallback when ChromaDB or external embeddings are unreachable.
 
-MIT License — see [LICENSE](LICENSE) for details.
+---
+
+## 👨‍💻 Author & Credits
+
+- **Architect & Lead Developer:** Mast Anuj ([@m4stanuj](https://github.com/m4stanuj))
+- **Inference Infrastructure:** NVIDIA NIM Enterprise Cloud (H100 Tensor Core)
+- **Scraping Engine:** Powered by [Scrapling](https://github.com/D4Vinci/Scrapling) anti-detection core
 
 ---
 
 <div align="center">
-  <sub>Built by <a href="https://github.com/m4stanuj">M4ST</a> · Solo Developer · Zero Funding · Continuous Iteration Since 2023</sub>
+<b>M4STCLAW OS — Stay Unstoppable.</b>
 </div>

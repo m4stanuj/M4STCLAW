@@ -50,7 +50,7 @@
   
   <!-- Console Banner -->
   <text x="35" y="80" class="text-dim">========================================================================</text>
-  <text x="35" y="102" class="text-cmd" font-weight="bold" filter="url(#glow)">⚡ M4STCLAW BAHUBALI EDITION — Powered by NVIDIA NIM H100</text>
+  <text x="35" y="102" class="text-cmd" font-weight="bold" filter="url(#glow)">⚡ M4STCLAW ENTERPRISE EDITION — Powered by NVIDIA NIM H100</text>
   <text x="35" y="124" class="text-output">🟢 AI Cockpit: Active | 🟢 24/7 Engine: Online | 🟢 Stealth Mesh: Connected</text>
   <text x="35" y="146" class="text-dim">------------------------------------------------------------------------</text>
 

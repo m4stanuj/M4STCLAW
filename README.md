@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ M4STCLAW v5.0 — Bahubali Autonomous Agent OS
+# ⚡ M4STCLAW v5.0 — Autonomous Agent Mesh OS
 ### Enterprise Autonomous Agent Mesh, Stealth Anti-Bot Scraping, and Intelligent Multi-Provider Neural Router
 
 [![Release](https://img.shields.io/github/v/release/m4stanuj/M4STCLAW?style=for-the-badge&color=blue)](https://github.com/m4stanuj/M4STCLAW/releases/tag/v5.0.0)
@@ -12,7 +12,7 @@
 
 <br/>
 
-<img src="assets/m4stclaw-hero-banner.jpg" alt="M4STCLAW Bahubali Hero Banner" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
+<img src="assets/m4stclaw-hero-banner.jpg" alt="M4STCLAW Autonomous Agent Mesh Hero Banner" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
 
 <br/>
 
@@ -56,7 +56,7 @@ graph TD
 
 How M4STCLAW synthesizes and transcends the capabilities of the #1 trending repositories on GitHub:
 
-| Capability | Scrapling / Crawl4AI | Browser-Use | Mem0 | LiteLLM | FastMCP | **M4STCLAW v5.0 (Bahubali)** |
+| Capability | Scrapling / Crawl4AI | Browser-Use | Mem0 | LiteLLM | FastMCP | **M4STCLAW v5.0 (Mesh Edition)** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Undetectable Anti-Bot Scraping** | ✅ | ❌ | ❌ | ❌ | ❌ | **✅ Built-in (Turnstile & Cloudflare bypass)** |
 | **Zero-Cost Live Web Search** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ Built-in (Ad-free organic parsing)** |

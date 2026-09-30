@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * ⚡ M4STCLAW v5.0 — Bahubali Autonomous Agent OS
+ * ⚡ M4STCLAW v5.0 — Autonomous Agent Mesh OS
  * Author: Mast Anuj (@m4stanuj)
  * Integrated with: Scrapling, LiteLLM Router, Mem0, FastMCP, NVIDIA NIM H100
  */
@@ -43,7 +43,7 @@ let currentModel = 'deepseek-ai/deepseek-v4.1-flash';
 
 function printBanner() {
   console.log('\x1b[36m%s\x1b[0m', '========================================================================');
-  console.log('\x1b[33m%s\x1b[0m', '   ⚡ M4STCLAW v5.0 — BAHUBALI AUTONOMOUS AGENT OS                      ');
+  console.log('\x1b[33m%s\x1b[0m', '   ⚡ M4STCLAW v5.0 — AUTONOMOUS AGENT MESH OS                          ');
   console.log('\x1b[35m%s\x1b[0m', '   Architect: Mast Anuj (@m4stanuj) | NVIDIA NIM H100 Enterprise        ');
   console.log('\x1b[36m%s\x1b[0m', '========================================================================');
   console.log('\x1b[32m%s\x1b[0m', '🟢 AI Cockpit:   ' + LIBRECHAT_TUNNEL);
@@ -73,7 +73,7 @@ async function queryNvidiaBrain(prompt, model = currentModel) {
     messages: [
       {
         role: 'system',
-        content: 'You are M4STCLAW Bahubali OS, created by Mast Anuj (@m4stanuj). You are an elite autonomous agent engineer. Give direct, sharp, high-intelligence responses.'
+        content: 'You are M4STCLAW Enterprise OS, architected by Mast Anuj (@m4stanuj). You are an elite autonomous agent system. Give direct, sharp, high-intelligence technical responses.'
       },
       { role: 'user', content: prompt }
     ],

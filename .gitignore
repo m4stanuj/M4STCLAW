@@ -47,3 +47,8 @@ screenshots/
 # Config secrets
 *.env
 !.env.template
+
+# Standalone SEA binaries & release archives
+m4stclaw.exe
+*.blob
+*.zip

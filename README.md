@@ -1,18 +1,14 @@
-<div align="center">
+# ⚡ M4STCLAW v5.0.0 — Bahubali Autonomous Agent OS
 
-# ⚡ M4STCLAW v3.6.0 — Autonomous AI Mesh Network
-
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
-[![CI](https://github.com/m4stanuj/M4STCLAW/actions/workflows/ci.yml/badge.svg)](https://github.com/m4stanuj/M4STCLAW/actions)
-[![Release](https://img.shields.io/github/v/release/m4stanuj/M4STCLAW?style=flat-square&color=3b82f6)](https://github.com/m4stanuj/M4STCLAW/releases)
-[![Stars](https://img.shields.io/github/stars/m4stanuj/M4STCLAW?style=flat-square&color=f59e0b)](https://github.com/m4stanuj/M4STCLAW/stargazers)
+[![Windows Standalone](https://img.shields.io/badge/Windows_Binary-Standalone_EXE-0078D6?style=flat-square&logo=windows)](https://github.com/m4stanuj/M4STCLAW/releases)
+[![NVIDIA NIM](https://img.shields.io/badge/Compute-NVIDIA_NIM_H100-76B900?style=flat-square&logo=nvidia)](https://build.nvidia.com)
+[![Scrapling](https://img.shields.io/badge/Scraper-Scrapling_Stealth-FF6F00?style=flat-square)](https://github.com/D4Vinci/Scrapling)
+[![MCP](https://img.shields.io/badge/MCP-Native_Mesh-8b5cf6?style=flat-square)](https://modelcontextprotocol.io)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
-[![Last Commit](https://img.shields.io/github/last-commit/m4stanuj/M4STCLAW?style=flat-square)](https://github.com/m4stanuj/M4STCLAW/commits)
-[![MCP](https://img.shields.io/badge/MCP-Native-8b5cf6?style=flat-square)](https://modelcontextprotocol.io)
 
-**Zero-cost AI framework with 18 MCP tools, 9 intelligent task chains, multi-provider failover routing, and a 3-tier memory architecture.**
+**World-Class Autonomous AI Agent OS: Zero-cost H100 inference, standalone portable binary, Cloudflare tunnels, Scrapling anti-bot stealth scraping, and 24/7 background automation.**
 
-[Architecture](#-architecture) · [Features](#-features) · [Quick Start](#-quick-start) · [Task Chains](#-task-chain-routing) · [Upgrade Walkthrough](docs/UPGRADE_WALKTHROUGH_v3.5_v3.6.md) · [Contributing](#-contributing)
+[Architecture](#-architecture) · [Features](#-features) · [Quick Start](#-quick-start) · [Task Chains](#-task-chain-routing) · [Releases](https://github.com/m4stanuj/M4STCLAW/releases)
 
 </div>
 

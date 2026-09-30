@@ -1,0 +1,5 @@
+{
+  "main": "m4stclaw-core.js",
+  "output": "sea-prep.blob",
+  "disableExperimentalSEAWarning": true
+}

@@ -201,3 +201,24 @@ def mesh_run(prompt: str) -> str:
     orchestrator = MeshOrchestrator()
     res = orchestrator.run_mesh_task(prompt)
     return json.dumps(res, indent=2)
+
+@mcp.tool(name="scrapling_search")
+def scrapling_search(query: str, max_results: int = 5) -> str:
+    """Performs a live stealth web search without API keys and returns structured results."""
+    res = scrapling.search_stealth(query, max_results)
+    return json.dumps(res, indent=2)
+
+@mcp.tool(name="n8n_agent_trigger")
+def n8n_agent_trigger(mission: str) -> str:
+    """Dispatches a 24/7 autonomous background task to the n8n automation engine."""
+    import httpx
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.post("http://127.0.0.1:5678/webhook/agent-trigger", json={
+                "source": "M4STCLAW FastMCP Server",
+                "mission": mission,
+            })
+            return f"Agent task dispatched to n8n. Status: {resp.status_code}"
+    except Exception as e:
+        return f"Failed to dispatch to n8n: {e}"
+

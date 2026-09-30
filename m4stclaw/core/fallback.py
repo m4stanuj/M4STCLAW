@@ -15,6 +15,9 @@ log = logging.getLogger("m4stclaw.core.fallback")
 
 # Provider definition templates
 # Format: (name, base_url, model, type)
+_NVIDIA_REASONING = ("nvidia", "https://integrate.api.nvidia.com/v1", "deepseek-ai/deepseek-v4.1-flash", "openai")
+_NVIDIA_VISION = ("nvidia", "https://integrate.api.nvidia.com/v1", "meta/llama-3.2-11b-vision-instruct", "openai")
+_NVIDIA_SCALE = ("nvidia", "https://integrate.api.nvidia.com/v1", "nvidia/nemotron-4-340b-instruct", "openai")
 _GROQ = ("groq", "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile", "openai")
 _CEREBRAS = ("cerebras", "https://api.cerebras.ai/v1", "llama-3.3-70b", "openai")
 _GEMINI = ("gemini", "https://generativelanguage.googleapis.com/v1beta", "gemini-2.5-flash", "gemini")
@@ -27,19 +30,19 @@ _OLLAMA = ("ollama", "http://localhost:11434/v1", "qwen2.5-coder:latest", "opena
 
 # Task Chains Definitions (Best-first ordered pipelines)
 TASK_CHAINS: Dict[str, List[Tuple[str, str, str, str]]] = {
-    "speed": [_CEREBRAS, _GROQ, _GEMINI, _OPENROUTER, _TOGETHER],
-    "reasoning": [_DEEPSEEK_R1, _GEMINI, _OPENROUTER, _TOGETHER],
-    "code": [_DEEPSEEK, _OPENROUTER, _SAMBANOVA, _GROQ, _OLLAMA],
-    "vision": [_GEMINI, _OPENROUTER],
-    "research": [_DEEPSEEK_R1, _GEMINI, _OPENROUTER, _TOGETHER],
-    "agent": [_DEEPSEEK_R1, _GEMINI, _GROQ, _OLLAMA],
-    "write": [_CEREBRAS, _GROQ, _TOGETHER, _OPENROUTER],
-    "pentest": [_GROQ, _DEEPSEEK_R1, _TOGETHER],
+    "speed": [_NVIDIA_REASONING, _CEREBRAS, _GROQ, _GEMINI, _OPENROUTER, _TOGETHER],
+    "reasoning": [_NVIDIA_REASONING, _DEEPSEEK_R1, _GEMINI, _OPENROUTER, _TOGETHER],
+    "code": [_NVIDIA_REASONING, _DEEPSEEK, _OPENROUTER, _SAMBANOVA, _GROQ, _OLLAMA],
+    "vision": [_NVIDIA_VISION, _GEMINI, _OPENROUTER],
+    "research": [_NVIDIA_SCALE, _NVIDIA_REASONING, _DEEPSEEK_R1, _GEMINI, _OPENROUTER],
+    "agent": [_NVIDIA_REASONING, _DEEPSEEK_R1, _GEMINI, _GROQ, _OLLAMA],
+    "write": [_NVIDIA_REASONING, _CEREBRAS, _GROQ, _TOGETHER, _OPENROUTER],
+    "pentest": [_NVIDIA_REASONING, _GROQ, _DEEPSEEK_R1, _TOGETHER],
     "offline": [_OLLAMA]
 }
 
 # Master list of all providers to act as absolute fallbacks
-ALL_PROVIDERS = [_CEREBRAS, _GROQ, _GEMINI, _DEEPSEEK, _SAMBANOVA, _TOGETHER, _OPENROUTER, _OLLAMA]
+ALL_PROVIDERS = [_NVIDIA_REASONING, _NVIDIA_VISION, _NVIDIA_SCALE, _CEREBRAS, _GROQ, _GEMINI, _DEEPSEEK, _SAMBANOVA, _TOGETHER, _OPENROUTER, _OLLAMA]
 
 def format_gemini_messages(messages: List[Dict[str, str]]) -> Dict[str, Any]:
     """Converts standard system/user/assistant role list to Gemini format."""

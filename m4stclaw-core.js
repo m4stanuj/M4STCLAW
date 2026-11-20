@@ -34,9 +34,9 @@ function getSecret(keyName) {
 }
 
 const NVIDIA_KEY = getSecret('NVIDIA_API_KEY');
-const N8N_TUNNEL = process.env.N8N_TUNNEL || 'https://throughout-charlie-routers-keen.trycloudflare.com';
-const LIBRECHAT_TUNNEL = process.env.LIBRECHAT_TUNNEL || 'https://automation-maximize-ceremony-pointer.trycloudflare.com';
-const SCRAPLING_TUNNEL = process.env.SCRAPLING_TUNNEL || 'https://lucky-contribution-scholarship-composite.trycloudflare.com';
+const N8N_TUNNEL = process.env.N8N_TUNNEL || '(not configured)';
+const LIBRECHAT_TUNNEL = process.env.LIBRECHAT_TUNNEL || '(not configured)';
+const SCRAPLING_TUNNEL = process.env.SCRAPLING_TUNNEL || '(not configured)';
 const LOCAL_BRIDGE = process.env.LOCAL_BRIDGE || 'http://127.0.0.1:3090';
 
 let currentModel = 'deepseek-ai/deepseek-v4.1-flash';

@@ -42,6 +42,12 @@
             </nav>
 
             <div class="sidebar-footer">
+                <form id="dashboard-unlock">
+                    <label for="dashboard-token">Dashboard token</label>
+                    <input id="dashboard-token" type="password" required autocomplete="off" spellcheck="false">
+                    <button class="action-btn" type="submit">Unlock</button>
+                    <p id="dashboard-unlock-status" role="status"></p>
+                </form>
                 <div class="status-indicator">
                     <span class="indicator-dot green"></span>
                     <span class="status-text">Server Active</span>

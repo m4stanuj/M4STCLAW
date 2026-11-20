@@ -14,13 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy packaging configuration and install package dependencies
+# Install after copying the package source so the build can find its modules.
 COPY pyproject.toml setup.py README.md /app/
-RUN pip install --no-cache-dir -e .
-
-# Copy application source code
 COPY m4stclaw/ /app/m4stclaw/
 COPY start.py /app/start.py
+RUN pip install --no-cache-dir .
 
 # Create sandbox and configuration directories
 RUN mkdir -p /app/sandbox && mkdir -p /root/.config/m4stclaw

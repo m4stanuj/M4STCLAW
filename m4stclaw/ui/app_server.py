@@ -1,18 +1,19 @@
 """
 app_server.py — FastAPI Backend & Dashboard Server Coordinator
 ==============================================================
-Exposes APIs for dashboard state telemetry, key commitments, and routes MCP client endpoints.
-Listens strictly on localhost:8000 to prevent exposure on external interfaces.
+Serves the local dashboard and its authenticated API.
 """
 
 import os
 import time
 import logging
+import secrets
+import re
 from typing import Dict, Any, Optional
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel
 from pathlib import Path
 
@@ -24,22 +25,51 @@ import m4stclaw.core.memory as memory
 from m4stclaw.core.config import CONFIG_DIR, get_cooldowns_status
 from m4stclaw.core.mesh import MeshOrchestrator
 
-# Unified FastMCP Server definition
-from m4stclaw.servers.server_definitions import mcp
-
 log = logging.getLogger("m4stclaw.ui.server")
 
 # Define app
-app = FastAPI(title="M4STCLAW Dashboard Server", version="3.6.0")
-
-# CORS constraints
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"]
+app = FastAPI(
+    title="M4STCLAW Dashboard Server",
+    version="3.6.0",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
 )
+
+API_TOKEN_ENV = "M4STCLAW_API_TOKEN"
+
+
+def _configured_api_token() -> str:
+    """Return the configured control-plane token without ever logging it."""
+    value = os.getenv(API_TOKEN_ENV, "")
+    return value if re.fullmatch(r"[A-Za-z0-9_-]{32,128}", value) else ""
+
+
+@app.middleware("http")
+async def require_control_plane_auth(request: Request, call_next):
+    """Require a bearer token for every dashboard API endpoint."""
+    path = request.url.path
+    if path == "/api" or path.startswith("/api/"):
+        expected = _configured_api_token()
+        if not expected:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": f"{API_TOKEN_ENV} must be configured before the control plane can be used."},
+            )
+        scheme, _, token = request.headers.get("Authorization", "").partition(" ")
+        if scheme.lower() != "bearer" or not secrets.compare_digest(
+            token.encode("utf-8"), expected.encode("ascii")
+        ):
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Authentication required. Use a Bearer token."},
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+    return await call_next(request)
+
+
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1"])
 
 # ── API Models ────────────────────────────────────────────────────────
 
@@ -55,11 +85,17 @@ class KeysCommitRequest(BaseModel):
     cerebras: Optional[str] = None
     composio: Optional[str] = None
 
+
 # Telemetry Accumulators (Mocks representing session states)
 _total_costs = 0.0
 _throughput_tps = 0
 
 # ── API Endpoints ─────────────────────────────────────────────────────
+
+@app.get("/api/auth/check")
+async def api_check_auth() -> Dict[str, str]:
+    return {"status": "authenticated"}
+
 
 @app.post("/api/execute")
 async def api_execute(req: ExecuteRequest) -> Dict[str, Any]:
@@ -293,22 +329,7 @@ async def api_telemetry() -> Dict[str, Any]:
 
 @app.post("/api/abort")
 async def api_abort() -> Dict[str, Any]:
-    """Endpoint representing execution cancel interrupt signals."""
-    log.warning("Halt interrupt requested: Cancel commands dispatched.")
-    return {"status": "success", "message": "Processes terminated."}
-
-# ── ROUTE MCP HTTP SERVER ─────────────────────────────────────────────
-
-# FastMCP runs locally over HTTP using sse and post handlers.
-# We mount FastMCP HTTP app routes under /mcp pathway.
-try:
-    from mcp.server.fastmcp import FastMCP
-    # FastMCP uses starlette/fastapi routes natively under-the-hood.
-    mcp_app = mcp.sse_app()
-    app.mount("/mcp", mcp_app)
-    log.info("MCP server bridge mounted successfully on '/mcp'.")
-except Exception as e:
-    log.error(f"Failed to mount FastMCP app: {e}")
+    raise HTTPException(status_code=501, detail="Server-side cancellation is unavailable.")
 
 # ── SERVE STATIC UI ───────────────────────────────────────────────────
 

@@ -4,13 +4,14 @@ services:
   m4stclaw:
     build: .
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - m4stclaw-data:/root/.config/m4stclaw
       - ./sandbox:/app/sandbox
     environment:
       - M4STCLAW_HOST=0.0.0.0
       - M4STCLAW_SANDBOX=/app/sandbox
+      - M4STCLAW_API_TOKEN=${M4STCLAW_API_TOKEN:?Set a unique control-plane token in .env before starting}
     restart: unless-stopped
 
 volumes:

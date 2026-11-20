@@ -1,12 +1,11 @@
 <div align="center">
 
 # ⚡ M4STCLAW v5.0 — Bahubali Autonomous Agent OS
-### Enterprise Autonomous Agent Mesh, Stealth Anti-Bot Scraping, and Intelligent Multi-Provider Neural Router
+### Local dashboard, agent coordination, and multi-provider model routing
 
 [![Release](https://img.shields.io/github/v/release/m4stanuj/M4STCLAW?style=for-the-badge&color=blue)](https://github.com/m4stanuj/M4STCLAW/releases/tag/v5.0.0)
 [![Windows Executable](https://img.shields.io/badge/Windows-Standalone_EXE_(Zero_Install)-0078D6?style=for-the-badge&logo=windows)](https://github.com/m4stanuj/M4STCLAW/releases/download/v5.0.0/m4stclaw-v5.0.0-windows-x64.zip)
 [![Compute Engine](https://img.shields.io/badge/NVIDIA_NIM-H100_Enterprise_Cluster-76B900?style=for-the-badge&logo=nvidia)](https://build.nvidia.com)
-[![Scrapling Anti-Bot](https://img.shields.io/badge/Stealth_Scraper-Scrapling_Engine-FF6F00?style=for-the-badge)](https://github.com/D4Vinci/Scrapling)
 [![MCP Compatible](https://img.shields.io/badge/FastMCP-Model_Context_Protocol-8b5cf6?style=for-the-badge)](https://modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
@@ -16,9 +15,9 @@
 
 <br/>
 
-**M4STCLAW** is an industrial-strength, autonomous AI Agent Operating System architected by **Mast Anuj ([@m4stanuj](https://github.com/m4stanuj))**. Built for sovereign developers, security researchers, and autonomous agent meshes, it combines zero-cost H100 inference, multi-tier cognitive memory, undetectable anti-bot web scraping, and 24/7 background automation into a single, zero-dependency Windows executable.
+**M4STCLAW** is a local AI workspace by **Mast Anuj ([@m4stanuj](https://github.com/m4stanuj))**. The source distribution includes model routing, memory, a local dashboard, and separate integration components. Provider availability and pricing depend on your own credentials and plan.
 
-[Quick Start](#-quick-start) • [Architecture](#-system-architecture) • [Competitive Benchmark](#-m4stclaw-vs-top-15-ai-repos) • [Live Services](#-live-cloud-endpoints) • [FastMCP Tools](#-fastmcp-tool-ecosystem)
+[Quick Start](#-quick-start) • [Architecture](#-system-architecture) • [Network defaults](#network-defaults)
 
 </div>
 
@@ -38,7 +37,7 @@ graph TD
     Cockpit --> Router[Layer 2: LiteLLM Router & Task Chains]
     
     subgraph "Core Orchestration & Tool Mesh"
-        Router --> Scrapling[Scrapling Anti-Bot Crawler & Stealth Search]
+        Router --> Scrapling[Optional local content integration]
         Router --> Mem0[Mem0 3-Tier Cognitive Memory]
         Router --> FastMCP[FastMCP 18+ Tool Protocol Bridge]
     end
@@ -58,18 +57,18 @@ How M4STCLAW synthesizes and transcends the capabilities of the #1 trending repo
 
 | Capability | Scrapling / Crawl4AI | Browser-Use | Mem0 | LiteLLM | FastMCP | **M4STCLAW v5.0 (Bahubali)** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Undetectable Anti-Bot Scraping** | ✅ | ❌ | ❌ | ❌ | ❌ | **✅ Built-in (Turnstile & Cloudflare bypass)** |
 | **Zero-Cost Live Web Search** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ Built-in (Ad-free organic parsing)** |
 | **3-Tier Cognitive Memory** | ❌ | ❌ | ✅ | ❌ | ❌ | **✅ Working → Episodic → Semantic (TF-IDF + Vector)** |
 | **Multi-Provider Fallback Routing** | ❌ | ❌ | ❌ | ✅ | ❌ | **✅ 9 Chains across NVIDIA H100, Groq, Cerebras** |
 | **MCP Native Protocol Support** | ❌ | ❌ | ❌ | ❌ | ✅ | **✅ Native FastMCP with 18+ agentic tools** |
 | **24/7 Background Automation** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ Integrated n8n autonomous webhook loops** |
 | **Single Portable Windows Binary** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ `m4stclaw.exe` (Zero Node/Python required)** |
-| **Cloudflare Public Mesh Tunnels** | ❌ | ❌ | ❌ | ❌ | ❌ | **✅ Zero-port-forwarding secure remote links** |
 
 ---
 
 ## ⚡ Quick Start
+
+For the Python dashboard, install the project with `python -m pip install -e .`. Generate a dashboard token with `python -c "import secrets; print(secrets.token_urlsafe(32))"`, store it as `M4STCLAW_API_TOKEN` in the process environment or the dashboard configuration directory's `.env`, then run `python start.py`. Open `http://127.0.0.1:8000` and enter the token in the sidebar. Docker Compose reads the token from the project `.env`.
 
 ### 1. Download Standalone Executable (Windows x64)
 No Node.js, Python, or Docker required!
@@ -105,29 +104,9 @@ M4STCLAW> Describe the architecture diagram in ./assets/m4stclaw-architecture.jp
 
 ---
 
-## 🌐 Live Cloud Endpoints
+## Network defaults
 
-M4STCLAW is pre-wired to communicate over encrypted Cloudflare HTTPS tunnels:
-
-| Service | Public HTTPS Tunnel | Port | Description |
-| :--- | :--- | :--- | :--- |
-| **LibreChat AI Cockpit** | `https://automation-maximize-ceremony-pointer.trycloudflare.com` | `:3080` | Multi-model chat interface with live MCP tools |
-| **n8n 24/7 Automation** | `https://throughout-charlie-routers-keen.trycloudflare.com` | `:5678` | Autonomous agent trigger and workflow orchestrator |
-| **M4ST-Mesh Bridge** | `https://lucky-contribution-scholarship-composite.trycloudflare.com` | `:3090` | High-speed REST bridge for stealth scraping & search |
-
----
-
-## 🛠️ FastMCP Tool Ecosystem
-
-M4STCLAW exposes 18+ high-level autonomous tools to Antigravity IDE, LibreChat, and Claude Desktop:
-
-1. `stealth_scrape`: Extract clean Markdown bypassing Cloudflare Turnstile, Akamai, and Datadome.
-2. `web_search_stealth`: Live search without API keys or usage fees.
-3. `n8n_trigger_agent`: Fire-and-forget 24/7 background agent workflows.
-4. `m4st_github_inspector`: Inspect and audit `@m4stanuj` repositories, commits, and releases.
-5. `m4stclaw_smart_route`: Route prompt to the optimal model based on latency, complexity, and cost.
-6. `memory_store` & `memory_recall`: Store and query episodic memories across sessions.
-7. `semantic_cache_lookup`: Sub-5ms cached response for repeated queries.
+The dashboard is intended for a trusted local machine. Docker Compose publishes port 8000 on loopback only. The dashboard does not mount the MCP tool server. Optional CLI integration addresses are configured explicitly and have no public defaults.
 
 ---
 

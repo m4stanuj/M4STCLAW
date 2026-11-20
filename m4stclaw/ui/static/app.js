@@ -63,6 +63,43 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    const unlockForm = document.getElementById("dashboard-unlock");
+    const tokenInput = document.getElementById("dashboard-token");
+    const unlockStatus = document.getElementById("dashboard-unlock-status");
+    let dashboardToken = "";
+
+    async function apiFetch(resource, options = {}) {
+        const headers = new Headers(options.headers);
+        if (dashboardToken) headers.set("Authorization", `Bearer ${dashboardToken}`);
+        return fetch(resource, { ...options, headers, credentials: "omit", redirect: "error" });
+    }
+
+    unlockForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const candidate = tokenInput.value.trim();
+        tokenInput.value = "";
+        const submit = unlockForm.querySelector("button");
+        submit.disabled = true;
+        try {
+            const response = await fetch("/api/auth/check", {
+                headers: { "Authorization": `Bearer ${candidate}` },
+                credentials: "omit",
+                redirect: "error",
+            });
+            if (response.ok) {
+                dashboardToken = candidate;
+                unlockStatus.textContent = "Dashboard unlocked.";
+                void pollTelemetry();
+            } else {
+                unlockStatus.textContent = response.status === 503 ? "Configure the server token first." : "Token rejected.";
+            }
+        } catch {
+            unlockStatus.textContent = "Could not reach the local dashboard.";
+        } finally {
+            submit.disabled = false;
+        }
+    });
+
     if (btnClearLogs) {
         btnClearLogs.addEventListener("click", () => {
             if (terminalOutput) {
@@ -197,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Query backend
             if (task === "agent") {
                 try {
-                    const response = await fetch("/api/mesh/execute", {
+                    const response = await apiFetch("/api/mesh/execute", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ prompt: prompt, task: task })
@@ -222,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             } else {
                 try {
-                    const response = await fetch("/api/execute/stream", {
+                    const response = await apiFetch("/api/execute/stream", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ prompt: prompt, task: task })
@@ -281,6 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
         bubble.appendChild(p);
         chatMessages.appendChild(bubble);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        return bubble;
     }
 
     function renderDiffPreview(diffLines) {
@@ -312,10 +350,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnAbort) {
         btnAbort.addEventListener("click", async () => {
             try {
-                await fetch("/api/abort", { method: "POST" });
-                addLogLine("warning", "Abort signal dispatched.");
+                const response = await apiFetch("/api/abort", { method: "POST" });
+                if (!response.ok) {
+                    const detail = await response.json();
+                    addLogLine("warning", detail.detail || "The task could not be cancelled.");
+                }
             } catch (e) {
-                console.debug("Abort request failed", e);
+                addLogLine("warning", "The dashboard could not contact the local server.");
             }
         });
     }
@@ -352,7 +393,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             try {
-                const response = await fetch("/api/keys", {
+                const response = await apiFetch("/api/keys", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(secrets)
@@ -395,8 +436,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const cooldownContainer = document.getElementById("cooldowns-list-container");
 
     async function pollTelemetry() {
+        if (!dashboardToken) return;
         try {
-            const response = await fetch("/api/telemetry");
+            const response = await apiFetch("/api/telemetry");
             if (!response.ok) return;
 
             const data = await response.json();

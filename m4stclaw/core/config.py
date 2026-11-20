@@ -41,16 +41,8 @@ def load_dotenv_simple(path: Path):
     except Exception as e:
         log.error(f"Error reading .env: {e}")
 
-# Load .env files from potential directories
-for env_path in [
-    CONFIG_DIR / ".env",
-    Path(".env"),
-    Path("../.env"),
-]:
-    if env_path.exists():
-        load_dotenv_simple(env_path)
-        log.info(f"Loaded config from {env_path.resolve()}")
-        break
+# Avoid treating files in whichever project is open as trusted service settings.
+load_dotenv_simple(CONFIG_DIR / ".env")
 
 # Key Rotator State
 _COOLDOWNS: Dict[str, float] = {}

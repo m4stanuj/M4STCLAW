@@ -108,6 +108,8 @@ M4STCLAW> Describe the architecture diagram in ./assets/m4stclaw-architecture.jp
 
 The dashboard is intended for a trusted local machine. Docker Compose publishes port 8000 on loopback only. The dashboard does not mount the MCP tool server. Optional CLI integration addresses are configured explicitly and have no public defaults.
 
+Dashboard run counts and durations are measured for the current server process. Provider rows show configuration and key cooldowns. They do not probe provider uptime or report billing.
+
 ---
 
 ## 🔒 Security & Code Compliance

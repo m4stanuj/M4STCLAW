@@ -250,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             });
                         }
                     } else {
-                        addChatBubble("assistant", "ERROR: " + (data.detail || data.message || "Unknown error"));
+                        addChatBubble("assistant", "ERROR: " + (data.detail || data.response || "Mesh execution failed."));
                         addLogLine("error", "Mesh task execution failed.");
                     }
                 } catch (err) {
@@ -290,7 +290,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                     }
                     
-                    addLogLine("success", "Stream delivery completed successfully.");
+                    fullText += decoder.decode();
+                    assistantBubble.querySelector("p").textContent = fullText || "No response returned.";
+                    if (fullText.trim() && !fullText.trimStart().startsWith("ERROR:")) {
+                        addLogLine("success", "Response complete.");
+                    } else {
+                        addLogLine("error", "The provider did not return a response.");
+                    }
                     
                     // Render preview dynamically if a diff block is detected in the response
                     if (fullText.includes("diff --git") || fullText.includes("+++")) {
@@ -305,6 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Reset DAG
             drawDAG(null, null);
+            void pollTelemetry();
         });
     }
 
@@ -428,27 +435,68 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ── TELEMETRY POLLING ─────────────────────────────────────────────
-    const costElem = document.getElementById("telemetry-cost");
-    const speedElem = document.getElementById("telemetry-speed");
+    const completedElem = document.getElementById("telemetry-completed");
+    const durationElem = document.getElementById("telemetry-duration");
+    const errorsElem = document.getElementById("telemetry-errors-count");
     const cacheRateElem = document.getElementById("telemetry-cache-rate");
     const keysCountElem = document.getElementById("telemetry-keys-count");
     const cacheSizeElem = document.getElementById("telemetry-cache-size");
     const cooldownContainer = document.getElementById("cooldowns-list-container");
+    const providerRows = document.getElementById("provider-status-rows");
+    const telemetryStatus = document.getElementById("telemetry-status");
+    let pollingTelemetry = false;
+
+    function renderProviders(providers) {
+        const rows = document.createDocumentFragment();
+        for (const provider of providers) {
+            const row = document.createElement("tr");
+            const name = document.createElement("th");
+            name.scope = "row";
+            name.textContent = provider.name;
+            const models = document.createElement("td");
+            models.textContent = provider.models.join(", ");
+            const status = document.createElement("td");
+            if (provider.local) {
+                status.textContent = "Local endpoint (unverified)";
+            } else if (provider.configured_keys === 0) {
+                status.textContent = "Key missing";
+            } else if (provider.cooling_keys > 0) {
+                status.textContent = `${provider.cooling_keys} of ${provider.configured_keys} keys cooling down`;
+            } else {
+                status.textContent = "Configured";
+            }
+            row.append(name, models, status);
+            rows.append(row);
+        }
+        providerRows.replaceChildren(rows);
+    }
 
     async function pollTelemetry() {
-        if (!dashboardToken) return;
+        if (!dashboardToken || pollingTelemetry) return;
+        pollingTelemetry = true;
         try {
             const response = await apiFetch("/api/telemetry");
-            if (!response.ok) return;
+            if (response.status === 401) {
+                dashboardToken = "";
+                telemetryStatus.textContent = "Dashboard locked";
+                return;
+            }
+            if (!response.ok) {
+                telemetryStatus.textContent = "Telemetry unavailable";
+                return;
+            }
 
             const data = await response.json();
 
             // Update stat cards
-            if (costElem) costElem.textContent = "$" + data.total_cost.toFixed(4);
-            if (speedElem) speedElem.textContent = data.speed_tps + " t/s";
-            if (cacheRateElem) cacheRateElem.textContent = data.cache_hit_rate_pct + "%";
+            if (completedElem) completedElem.textContent = data.completed_runs;
+            if (durationElem) durationElem.textContent = data.last_run_duration_ms === null ? "—" : data.last_run_duration_ms + " ms";
+            if (errorsElem) errorsElem.textContent = data.failed_runs;
+            if (cacheRateElem) cacheRateElem.textContent = data.cache_hit_rate_pct === null ? "—" : data.cache_hit_rate_pct + "%";
             if (keysCountElem) keysCountElem.textContent = data.keys_configured + " Keys";
             if (cacheSizeElem) cacheSizeElem.textContent = data.cache_entries + " entries";
+            renderProviders(data.providers);
+            telemetryStatus.textContent = "Telemetry connected";
 
             // Update cooldowns
             if (cooldownContainer) {
@@ -458,7 +506,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (Object.keys(cds).length === 0) {
                     const p = document.createElement("p");
                     p.classList.add("cooldown-empty-msg");
-                    p.textContent = "No keys are in cooldown. All providers ready.";
+                    p.textContent = "No cooldowns reported.";
                     cooldownContainer.appendChild(p);
                 } else {
                     Object.entries(cds).forEach(([key, sec]) => {
@@ -480,8 +528,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-        } catch (e) {
-            console.debug("Telemetry fetch failed", e);
+        } catch {
+            telemetryStatus.textContent = "Telemetry unavailable";
+        } finally {
+            pollingTelemetry = false;
         }
     }
 

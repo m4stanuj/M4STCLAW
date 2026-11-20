@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from m4stclaw.ui.app_server import app
+from m4stclaw.ui import app_server
 from m4stclaw.start import setup_config_directory
 
 
@@ -47,3 +48,43 @@ def test_setup_ignores_working_directory_template(tmp_path, monkeypatch):
     config = (config_dir / ".env").read_text(encoding="utf-8")
     assert "M4STCLAW_API_TOKEN=\n" in config
     assert "project-value" not in config
+
+
+def test_dashboard_uses_observed_runs_and_provider_configuration(client, monkeypatch):
+    http, headers = client
+    monkeypatch.setattr(app.state, "execution_telemetry", app_server.ExecutionTelemetry())
+    monkeypatch.setattr(app_server.memory, "query_semantic_memory", lambda *args, **kwargs: [])
+    monkeypatch.setattr(app_server.memory, "add_episodic_log", lambda *args: None)
+    monkeypatch.setattr(app_server.cache, "get_cache_stats", lambda: {
+        "hits": 0, "misses": 0, "hit_rate_pct": 0.0, "size": 0,
+    })
+    monkeypatch.setattr(app_server.fallback, "get_keys_for_provider", lambda name: (
+        ["fixture-secret"] if name == "groq" else ["PLACEHOLDER_NO_KEY"]
+    ))
+    monkeypatch.setattr(app_server, "get_cooldowns_status", lambda: {"groq:0": 12.0})
+
+    cold = http.get("/api/telemetry", headers=headers)
+    assert cold.json()["last_run_duration_ms"] is None
+    assert cold.json()["cache_hit_rate_pct"] is None
+    assert cold.json()["completed_runs"] == 0
+    assert "fixture-secret" not in cold.text
+    providers = {provider["name"]: provider for provider in cold.json()["providers"]}
+    assert providers["groq"]["configured_keys"] == providers["groq"]["cooling_keys"] == 1
+    assert providers["ollama"]["local"]
+
+    async def completion(*args, **kwargs):
+        return "Fixture reply"
+
+    async def failed_stream(*args, **kwargs):
+        yield "ERROR: Fixture provider unavailable"
+
+    monkeypatch.setattr(app_server.fallback, "chat_complete_async", completion)
+    monkeypatch.setattr(app_server.fallback, "chat_complete_stream", failed_stream)
+    request = {"prompt": "test", "task": "speed"}
+    assert http.post("/api/execute", headers=headers, json=request).status_code == 200
+    assert http.post("/api/execute/stream", headers=headers, json=request).text.startswith("ERROR:")
+
+    stats = http.get("/api/telemetry", headers=headers).json()
+    assert stats["completed_runs"] == 1
+    assert stats["failed_runs"] == 1
+    assert stats["last_run_duration_ms"] >= 0

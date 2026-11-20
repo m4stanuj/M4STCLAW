@@ -50,7 +50,7 @@
                 </form>
                 <div class="status-indicator">
                     <span class="indicator-dot green"></span>
-                    <span class="status-text">Server Active</span>
+                    <span id="telemetry-status" class="status-text">Dashboard locked</span>
                 </div>
                 <div class="env-indicator">
                     <span>Environment:</span>
@@ -81,32 +81,31 @@
                     <!-- Stats Cards -->
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-icon blue">💰</div>
+                            <div class="stat-icon blue">✓</div>
                             <div class="stat-info">
-                                <span class="stat-label">Total Cost</span>
-                                <span id="telemetry-cost" class="stat-value">$0.00</span>
-                                <span class="stat-change positive">↓ 100% saved</span>
+                                <span class="stat-label">Completed Runs</span>
+                                <span id="telemetry-completed" class="stat-value">—</span>
                             </div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon green">⚡</div>
                             <div class="stat-info">
-                                <span class="stat-label">Throughput</span>
-                                <span id="telemetry-speed" class="stat-value">0 t/s</span>
+                                <span class="stat-label">Last Run Duration</span>
+                                <span id="telemetry-duration" class="stat-value">—</span>
                             </div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon purple">🎯</div>
                             <div class="stat-info">
                                 <span class="stat-label">Cache Hit Rate</span>
-                                <span id="telemetry-cache-rate" class="stat-value">58%</span>
+                                <span id="telemetry-cache-rate" class="stat-value">—</span>
                             </div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon amber">🔄</div>
                             <div class="stat-info">
-                                <span class="stat-label">Active Keys</span>
-                                <span id="telemetry-keys-count" class="stat-value">0 Keys</span>
+                                <span class="stat-label">Configured Keys</span>
+                                <span id="telemetry-keys-count" class="stat-value">—</span>
                             </div>
                         </div>
                     </div>
@@ -151,69 +150,18 @@
                                 <h3 class="card-title">
                                     <span class="card-title-icon">🏢</span> Provider Status
                                 </h3>
-                                <span class="card-badge info">7 Providers</span>
                             </div>
                             <div class="card-body">
                                 <table class="provider-table" id="provider-status-table">
                                     <thead>
                                         <tr>
-                                            <th>Provider</th>
-                                            <th>Model</th>
-                                            <th>Status</th>
-                                            <th>Chain</th>
-                                            <th>Latency</th>
+                                            <th scope="col">Provider</th>
+                                            <th scope="col">Models in Router</th>
+                                            <th scope="col">Configuration</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td class="provider-name">Cerebras</td>
-                                            <td>llama-3.3-70b</td>
-                                            <td><span class="status-pill active"><span class="status-pill-dot"></span>Active</span></td>
-                                            <td>Speed</td>
-                                            <td>~120ms</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="provider-name">Groq</td>
-                                            <td>llama-3.3-70b-versatile</td>
-                                            <td><span class="status-pill active"><span class="status-pill-dot"></span>Active</span></td>
-                                            <td>Speed, Write</td>
-                                            <td>~200ms</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="provider-name">Gemini</td>
-                                            <td>gemini-2.5-flash</td>
-                                            <td><span class="status-pill active"><span class="status-pill-dot"></span>Active</span></td>
-                                            <td>Reasoning, Vision</td>
-                                            <td>~350ms</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="provider-name">DeepSeek</td>
-                                            <td>deepseek-chat / reasoner</td>
-                                            <td><span class="status-pill active"><span class="status-pill-dot"></span>Active</span></td>
-                                            <td>Code, Reasoning</td>
-                                            <td>~450ms</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="provider-name">OpenRouter</td>
-                                            <td>llama-3.3-70b-instruct:free</td>
-                                            <td><span class="status-pill active"><span class="status-pill-dot"></span>Active</span></td>
-                                            <td>Fallback</td>
-                                            <td>~300ms</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="provider-name">SambaNova</td>
-                                            <td>Llama-3.1-405B-Instruct</td>
-                                            <td><span class="status-pill inactive"><span class="status-pill-dot"></span>No Key</span></td>
-                                            <td>Code</td>
-                                            <td>—</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="provider-name">Ollama</td>
-                                            <td>qwen2.5-coder:latest</td>
-                                            <td><span class="status-pill inactive"><span class="status-pill-dot"></span>Local</span></td>
-                                            <td>Offline</td>
-                                            <td>~800ms</td>
-                                        </tr>
+                                    <tbody id="provider-status-rows">
+                                        <tr><td colspan="3">Unlock the dashboard to see provider configuration.</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -374,8 +322,8 @@
                                     <span id="telemetry-cache-size" class="metric-val">0 entries</span>
                                 </div>
                                 <div class="metric-item">
-                                    <span class="metric-label"><span class="metric-label-icon">⚠️</span> Total Errors</span>
-                                    <span id="telemetry-errors-count" class="metric-val">0</span>
+                                    <span class="metric-label"><span class="metric-label-icon">⚠️</span> Failed Runs</span>
+                                    <span id="telemetry-errors-count" class="metric-val">—</span>
                                 </div>
                                 <div class="metric-item">
                                     <span class="metric-label"><span class="metric-label-icon">🧠</span> T1 Working Memory</span>

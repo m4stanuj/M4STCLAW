@@ -2,7 +2,7 @@ name: M4STCLAW Python Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, 'codex/production-hardening-2026-11']
   pull_request:
     branches: [ main ]
 
@@ -13,6 +13,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      M4STCLAW_CONFIG: ${{ runner.temp }}/m4stclaw-config
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]

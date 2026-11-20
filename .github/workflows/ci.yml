@@ -2,12 +2,16 @@ name: Static checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/production-hardening-2026-11']
   pull_request:
     branches: [main]
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   syntax:
@@ -29,3 +33,34 @@ jobs:
           python -m compileall -q m4stclaw tests
           node --check m4stclaw-core.js
           node --check m4stclaw/ui/static/app.js
+
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COMPOSE_PROJECT_NAME: m4stclaw-smoke-${{ github.run_id }}
+      M4STCLAW_API_TOKEN: ci-fixture-token-for-compose-12345678
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Build and start the local dashboard
+        run: docker compose up --build --detach
+      - name: Verify Dashboard, bearer authentication, and loopback-only publishing
+        run: |
+          set -euo pipefail
+          base=http://127.0.0.1:8000
+          curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 2 "$base/" > "${RUNNER_TEMP}/dashboard.html"
+          grep -q 'dashboard-unlock' "${RUNNER_TEMP}/dashboard.html"
+          test "$(docker compose port m4stclaw 8000)" = "127.0.0.1:8000"
+          test "$(curl -sS -o /dev/null -w '%{http_code}' "$base/api/telemetry")" = 401
+          auth="Authorization: Bearer $M4STCLAW_API_TOKEN"
+          curl --fail --silent --show-error -H "$auth" "$base/api/telemetry" |
+            python3 -c 'import json, sys; s = json.load(sys.stdin); assert s["completed_runs"] == 0 and s["failed_runs"] == 0'
+          test "$(curl -sS -o /dev/null -w '%{http_code}' -H "$auth" "$base/mcp/sse")" = 404
+      - name: Show dashboard logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail 100
+      - name: Remove the smoke-test containers and volumes
+        if: always()
+        run: docker compose down --volumes --remove-orphans

@@ -24,7 +24,9 @@ import m4stclaw.core.router as router
 import m4stclaw.core.fallback as fallback
 import m4stclaw.core.cache as cache
 import m4stclaw.core.memory as memory
-from m4stclaw.core.config import CONFIG_DIR, get_cooldowns_status
+from m4stclaw.core.config import (
+    CONFIG_DIR, ManagedProviderKeyError, get_cooldowns_status, update_provider_keys,
+)
 from m4stclaw.core.mesh import MeshOrchestrator
 
 log = logging.getLogger("m4stclaw.ui.server")
@@ -273,54 +275,18 @@ async def api_mesh_execute(req: ExecuteRequest) -> Dict[str, Any]:
 
 @app.post("/api/keys")
 async def api_keys_commit(req: KeysCommitRequest) -> Dict[str, Any]:
-    """Commit API keys directly to the configuration .env file."""
-    env_path = CONFIG_DIR / ".env"
-    
+    """Save explicitly entered provider keys; blank fields leave existing keys alone."""
+    updated = {f"{name.upper()}_API_KEY": value for name, value in req.model_dump().items() if value}
     try:
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        lines = []
-        if env_path.exists():
-            lines = env_path.read_text(encoding="utf-8").splitlines()
-            
-        key_map = {
-            "GROQ_API_KEY": req.groq,
-            "GEMINI_API_KEY": req.gemini,
-            "OPENROUTER_API_KEY": req.openrouter,
-            "DEEPSEEK_API_KEY": req.deepseek,
-            "CEREBRAS_API_KEY": req.cerebras,
-            "COMPOSIO_API_KEY": req.composio
-        }
-        
-        new_lines = []
-        updated = set()
-        
-        # Keep existing unrelated env variables, update matching ones
-        for line in lines:
-            if "=" in line and not line.strip().startswith("#"):
-                k, _, _ = line.partition("=")
-                k = k.strip()
-                if k in key_map:
-                    val = key_map[k]
-                    if val:
-                        new_lines.append(f"{k}={val}")
-                        updated.add(k)
-                    continue
-            new_lines.append(line)
-            
-        # Add new secrets not already in the file
-        for k, val in key_map.items():
-            if k not in updated and val:
-                new_lines.append(f"{k}={val}")
-                
-        env_path.write_text("\n".join(new_lines), encoding="utf-8")
-        
-        # Reload env variables instantly
-        from m4stclaw.core.config import load_dotenv_simple
-        load_dotenv_simple(env_path)
-        
-        return {"status": "success", "message": "API keys committed to config .env file."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to commit secrets: {e}")
+        count = update_provider_keys(CONFIG_DIR / ".env", updated)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Enter a single-line token for each key.") from None
+    except ManagedProviderKeyError:
+        raise HTTPException(status_code=409, detail="A matching key is managed by the server environment.") from None
+    except OSError:
+        log.error("Could not save the provider key file.")
+        raise HTTPException(status_code=500, detail="Could not save provider keys.") from None
+    return {"status": "success", "updated": count}
 
 @app.get("/api/telemetry")
 async def api_telemetry() -> Dict[str, Any]:

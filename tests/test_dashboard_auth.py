@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from m4stclaw.ui.app_server import app
 from m4stclaw.ui import app_server
+from m4stclaw.core import config
 from m4stclaw.start import setup_config_directory
 
 
@@ -88,3 +89,58 @@ def test_dashboard_uses_observed_runs_and_provider_configuration(client, monkeyp
     assert stats["completed_runs"] == 1
     assert stats["failed_runs"] == 1
     assert stats["last_run_duration_ms"] >= 0
+
+
+def test_save_keys_preserves_blanks_and_changes_only_file_managed_values(client, tmp_path, monkeypatch):
+    http, headers = client
+    monkeypatch.setattr(app_server, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(config, "_FILE_LOADED_VALUES", {})
+    for name in ("GROQ_API_KEY", "GEMINI_API_KEY"):
+        monkeypatch.setenv(name, "fixture")
+        monkeypatch.delenv(name)
+    env_file = tmp_path / ".env"
+    env_file.write_text("GROQ_API_KEY=old-test-groq\nGEMINI_API_KEY=keep-test-gemini\n# keep\n", encoding="utf-8")
+    config.load_dotenv_simple(env_file)
+
+    response = http.post("/api/keys", headers=headers, json={"groq": "new-test-groq", "gemini": ""})
+    assert response.json() == {"status": "success", "updated": 1}
+    assert config.get_keys_for_provider("groq")[0] == "new-test-groq"
+    assert env_file.read_text(encoding="utf-8") == "GROQ_API_KEY=new-test-groq\nGEMINI_API_KEY=keep-test-gemini\n# keep\n"
+    original = env_file.read_bytes()
+    assert http.post("/api/keys", headers=headers, json={}).json()["updated"] == 0
+    assert env_file.read_bytes() == original
+
+
+def test_rejected_key_updates_leave_config_unchanged(client, tmp_path, monkeypatch):
+    http, headers = client
+    monkeypatch.setattr(app_server, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(config, "_FILE_LOADED_VALUES", {})
+    monkeypatch.setenv("GROQ_API_KEY", "managed-test-key")
+    env_file = tmp_path / ".env"
+    env_file.write_text("# original\n", encoding="utf-8")
+    bad = http.post("/api/keys", headers=headers, json={"gemini": "incorrect test token"})
+    managed = http.post("/api/keys", headers=headers, json={"groq": "new-test-value"})
+    assert bad.status_code == 422
+    assert managed.status_code == 409
+    assert "incorrect test token" not in bad.text
+    assert "managed-test-key" not in managed.text
+    assert env_file.read_text(encoding="utf-8") == "# original\n"
+
+
+def test_failed_atomic_save_never_changes_current_keys(tmp_path, monkeypatch):
+    env_file = tmp_path / ".env"
+    env_file.write_text("GROQ_API_KEY=existing-test-key\n", encoding="utf-8")
+    monkeypatch.setenv("GROQ_API_KEY", "fixture")
+    monkeypatch.delenv("GROQ_API_KEY")
+    monkeypatch.setattr(config, "_FILE_LOADED_VALUES", {})
+    config.load_dotenv_simple(env_file)
+
+    def fail_replace(*args):
+        raise OSError("Fixture failed replace")
+
+    monkeypatch.setattr(config.os, "replace", fail_replace)
+    with pytest.raises(OSError):
+        config.update_provider_keys(env_file, {"GROQ_API_KEY": "unused-test-key"})
+    assert config.get_keys_for_provider("groq")[0] == "existing-test-key"
+    assert env_file.read_text(encoding="utf-8") == "GROQ_API_KEY=existing-test-key\n"
+    assert list(tmp_path.iterdir()) == [env_file]

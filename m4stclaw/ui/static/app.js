@@ -410,10 +410,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (data.status === "success") {
                     if (saveStatus) {
-                        saveStatus.textContent = "Configuration saved successfully.";
+                        saveStatus.textContent = data.updated ? `Saved ${data.updated} provider key(s).` : "No keys changed.";
                         saveStatus.className = "save-status-text success";
                     }
-                    addLogLine("success", "API keys updated in .env configuration.");
+                    if (data.updated) {
+                        addLogLine("success", "Provider keys updated.");
+                        void pollTelemetry();
+                    }
 
                     // Clear inputs for security
                     document.querySelectorAll("#keys-manager-form input").forEach(input => {
@@ -421,7 +424,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                 } else {
                     if (saveStatus) {
-                        saveStatus.textContent = "Error: " + (data.message || "Save failed");
+                        saveStatus.textContent = typeof data.detail === "string" ? data.detail : "Save failed.";
                         saveStatus.className = "save-status-text error";
                     }
                 }

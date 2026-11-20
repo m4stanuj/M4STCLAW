@@ -8,6 +8,7 @@ import os
 import re
 import time
 import logging
+import tempfile
 import threading
 from typing import Dict, List, Tuple, Optional
 from pathlib import Path
@@ -22,6 +23,18 @@ def get_config_dir() -> Path:
     return Path(os.path.expanduser("~/.config/m4stclaw"))
 
 CONFIG_DIR = get_config_dir()
+
+_FILE_LOADED_VALUES: Dict[str, str] = {}
+_CONFIG_WRITE_LOCK = threading.Lock()
+PROVIDER_KEY_NAMES = frozenset(
+    {"GROQ_API_KEY", "GEMINI_API_KEY", "OPENROUTER_API_KEY", "DEEPSEEK_API_KEY",
+     "CEREBRAS_API_KEY", "COMPOSIO_API_KEY"}
+)
+
+
+class ManagedProviderKeyError(Exception):
+    """A requested key belongs to the process environment."""
+
 
 def load_dotenv_simple(path: Path):
     """Simple .env loader — no external dependency."""
@@ -38,8 +51,67 @@ def load_dotenv_simple(path: Path):
             val = val.strip().strip('"').strip("'")
             if val and key not in os.environ:
                 os.environ[key] = val
+                _FILE_LOADED_VALUES[key] = val
     except Exception as e:
         log.error(f"Error reading .env: {e}")
+
+
+def update_provider_keys(path: Path, keys: Dict[str, str]) -> int:
+    """Update explicitly provided file-managed keys and apply them to this process."""
+    if not keys:
+        return 0
+    if any(
+        name not in PROVIDER_KEY_NAMES or not re.fullmatch(r"[A-Za-z0-9._~+/=-]{1,512}", value)
+        for name, value in keys.items()
+    ):
+        raise ValueError("Keys must be single-line provider token values.")
+
+    with _CONFIG_WRITE_LOCK:
+        if any(
+            name in os.environ and os.environ[name] != _FILE_LOADED_VALUES.get(name)
+            for name in keys
+        ):
+            raise ManagedProviderKeyError
+        if path.is_symlink():
+            raise OSError("Provider key file must not be a symbolic link.")
+
+        path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except FileNotFoundError:
+            lines = []
+
+        written_names = set()
+        output = []
+        for line in lines:
+            name, sep, _ = line.strip().partition("=")
+            name = name.strip()
+            if sep and name in keys:
+                if name not in written_names:
+                    output.append(f"{name}={keys[name]}")
+                    written_names.add(name)
+            else:
+                output.append(line)
+        output.extend(f"{name}={value}" for name, value in keys.items() if name not in written_names)
+
+        temp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", newline="\n", dir=path.parent, delete=False
+            ) as temp:
+                temp_path = Path(temp.name)
+                temp.write("\n".join(output) + "\n")
+                temp.flush()
+                os.fsync(temp.fileno())
+            os.replace(temp_path, path)
+        finally:
+            if temp_path is not None:
+                temp_path.unlink(missing_ok=True)
+
+        for name, value in keys.items():
+            os.environ[name] = value
+            _FILE_LOADED_VALUES[name] = value
+    return len(keys)
 
 # Avoid treating files in whichever project is open as trusted service settings.
 load_dotenv_simple(CONFIG_DIR / ".env")

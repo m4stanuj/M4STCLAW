@@ -50,7 +50,7 @@ jobs:
         run: |
           set -euo pipefail
           base=http://127.0.0.1:8000
-          curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 2 "$base/" > "${RUNNER_TEMP}/dashboard.html"
+          curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 --max-time 5 --retry-max-time 60 -o "${RUNNER_TEMP}/dashboard.html" "$base/"
           grep -q 'dashboard-unlock' "${RUNNER_TEMP}/dashboard.html"
           test "$(docker compose port m4stclaw 8000)" = "127.0.0.1:8000"
           test "$(curl -sS -o /dev/null -w '%{http_code}' "$base/api/telemetry")" = 401

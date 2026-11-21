@@ -30,11 +30,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (btn && view) {
             btn.addEventListener("click", () => {
                 // Deactivate all
-                Object.values(navButtons).forEach(b => b.classList.remove("active"));
+                Object.values(navButtons).forEach(b => {
+                    b.classList.remove("active");
+                    b.removeAttribute("aria-current");
+                });
                 Object.values(views).forEach(v => v.classList.remove("active-view"));
 
                 // Activate clicked
                 btn.classList.add("active");
+                btn.setAttribute("aria-current", "page");
                 view.classList.add("active-view");
 
                 addLogLine("system", "Switched view to " + key.toUpperCase());
@@ -352,22 +356,6 @@ document.addEventListener("DOMContentLoaded", () => {
         previewArea.appendChild(container);
     }
 
-    // ── ABORT BUTTON ──────────────────────────────────────────────────
-    const btnAbort = document.getElementById("btn-abort-task");
-    if (btnAbort) {
-        btnAbort.addEventListener("click", async () => {
-            try {
-                const response = await apiFetch("/api/abort", { method: "POST" });
-                if (!response.ok) {
-                    const detail = await response.json();
-                    addLogLine("warning", detail.detail || "The task could not be cancelled.");
-                }
-            } catch (e) {
-                addLogLine("warning", "The dashboard could not contact the local server.");
-            }
-        });
-    }
-
     // ── REFRESH BUTTON ────────────────────────────────────────────────
     const btnRefresh = document.getElementById("btn-refresh-telemetry");
     if (btnRefresh) {
@@ -496,7 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (durationElem) durationElem.textContent = data.last_run_duration_ms === null ? "—" : data.last_run_duration_ms + " ms";
             if (errorsElem) errorsElem.textContent = data.failed_runs;
             if (cacheRateElem) cacheRateElem.textContent = data.cache_hit_rate_pct === null ? "—" : data.cache_hit_rate_pct + "%";
-            if (keysCountElem) keysCountElem.textContent = data.keys_configured + " Keys";
+            if (keysCountElem) keysCountElem.textContent = data.keys_configured;
             if (cacheSizeElem) cacheSizeElem.textContent = data.cache_entries + " entries";
             renderProviders(data.providers);
             telemetryStatus.textContent = "Telemetry connected";

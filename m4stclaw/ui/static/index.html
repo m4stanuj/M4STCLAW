@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="M4STCLAW v3.6 — Enterprise AI Mesh Network Dashboard. Monitor task routing, provider health, API key rotation, and system telemetry.">
     <title>M4STCLAW — AI Mesh Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,14 +15,14 @@
         <!-- Sidebar Navigation -->
         <aside class="app-sidebar" aria-label="Navigation Sidebar">
             <div class="sidebar-header">
-                <span class="logo-icon">⚡</span>
+                <span class="logo-icon" aria-hidden="true">M</span>
                 <h1 class="logo-text">M4STCLAW</h1>
                 <span class="logo-version">v3.6</span>
             </div>
 
             <nav class="sidebar-nav" aria-label="Main Navigation">
                 <span class="nav-section-label">Overview</span>
-                <button id="nav-btn-dashboard" class="nav-item active" type="button">
+                <button id="nav-btn-dashboard" class="nav-item active" type="button" aria-current="page">
                     <span class="nav-icon">📊</span> Dashboard
                 </button>
                 <button id="nav-btn-playground" class="nav-item" type="button">
@@ -45,7 +42,7 @@
                 <form id="dashboard-unlock">
                     <label for="dashboard-token">Dashboard token</label>
                     <input id="dashboard-token" type="password" required autocomplete="off" spellcheck="false">
-                    <button class="action-btn" type="submit">Unlock</button>
+                    <button class="action-btn primary" type="submit">Unlock</button>
                     <p id="dashboard-unlock-status" role="status"></p>
                 </form>
                 <div class="status-indicator">
@@ -69,11 +66,10 @@
                 <div class="view-header">
                     <div class="view-header-left">
                         <h2 id="dashboard-title" class="view-title">Agent Mesh Dashboard</h2>
-                        <p class="view-desc">Real-time monitoring of task routing, provider health, and cache performance.</p>
+                        <p class="view-desc">Task routing, provider configuration, and cache activity.</p>
                     </div>
                     <div class="quick-actions">
                         <button id="btn-refresh-telemetry" class="action-btn" type="button">↻ Refresh</button>
-                        <button id="btn-abort-task" class="action-btn danger" type="button">⬛ Abort</button>
                     </div>
                 </div>
 
@@ -118,7 +114,6 @@
                                 <h3 class="card-title">
                                     <span class="card-title-icon">🔀</span> Task Routing DAG
                                 </h3>
-                                <span class="card-badge live">Live</span>
                             </div>
                             <div class="card-body dag-canvas-wrapper">
                                 <svg id="dag-canvas" width="100%" height="100%" viewBox="0 0 800 400" aria-label="Visual Directed Acyclic Graph of active agents"></svg>
@@ -137,7 +132,6 @@
                             </div>
                             <div class="card-body">
                                 <div id="log-terminal-output" class="terminal-body" aria-live="polite">
-                                    <div class="log-line system">[SYSTEM] M4STCLAW v3.6 initialized. Listening on localhost:8000...</div>
                                 </div>
                             </div>
                         </div>

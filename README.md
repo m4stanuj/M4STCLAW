@@ -70,6 +70,18 @@ How M4STCLAW synthesizes and transcends the capabilities of the #1 trending repo
 
 For the Python dashboard, install the project with `python -m pip install -e .`. Generate a dashboard token with `python -c "import secrets; print(secrets.token_urlsafe(32))"`, store it as `M4STCLAW_API_TOKEN` in the process environment or the dashboard configuration directory's `.env`, then run `python start.py`. Open `http://127.0.0.1:8000` and enter the token in the sidebar. Docker Compose reads the token from the project `.env`.
 
+### Build the Windows dashboard preview from source
+
+From the repository root in PowerShell on Windows x64, use a Python 3.11 x64 virtual environment.
+
+```powershell
+python -m pip install . pyinstaller==6.22.3 pywin32==312
+./scripts/build-windows.ps1
+python scripts/smoke-windows.py build/windows/M4STCLAW.exe
+```
+
+The preview executable bundles the Python runtime and dashboard assets. It uses the dashboard token and configuration described above. With the token set, run `build\windows\M4STCLAW.exe` and open `http://127.0.0.1:8000`. The build produces an unsigned local preview.
+
 ### 1. Download Standalone Executable (Windows x64)
 No Node.js, Python, or Docker required!
 - Download the latest standalone release: **[m4stclaw-v5.0.0-windows-x64.zip](https://github.com/m4stanuj/M4STCLAW/releases/download/v5.0.0/m4stclaw-v5.0.0-windows-x64.zip)**

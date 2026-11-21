@@ -19,6 +19,7 @@ try {
     $arguments = @(
         '-m', 'PyInstaller', '--noconfirm', '--onefile', '--noupx',
         '--name', 'M4STCLAW',
+        '--icon', (Join-Path $repo 'assets\m4stclaw-windows.ico'),
         '--specpath', $output, '--distpath', $output,
         '--workpath', (Join-Path $output 'work'),
         '--add-data', "${static}:m4stclaw/ui/static",

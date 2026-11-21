@@ -8,6 +8,7 @@ on:
     paths:
       - '.github/workflows/windows-preview.yml'
       - 'm4stclaw/**'
+      - 'assets/m4stclaw-windows.ico'
       - 'scripts/*windows*'
       - 'pyproject.toml'
       - 'start.py'

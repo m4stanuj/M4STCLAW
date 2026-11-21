@@ -1,102 +1,126 @@
-/**
- * M4STCLAW Dashboard — app.js
- * ============================
- * Professional admin panel controller.
- * Handles navigation, chat interactions, API key management, DAG rendering,
- * telemetry polling, and log console. All DOM manipulation uses safe textContent/createElement.
- */
-
 document.addEventListener("DOMContentLoaded", () => {
-
-    // ── NAVIGATION CONTROLLER ─────────────────────────────────────────
-    const navButtons = {
-        dashboard: document.getElementById("nav-btn-dashboard"),
-        playground: document.getElementById("nav-btn-playground"),
-        keys: document.getElementById("nav-btn-keys"),
-        telemetry: document.getElementById("nav-btn-telemetry")
-    };
-
-    const views = {
-        dashboard: document.getElementById("view-dashboard"),
-        playground: document.getElementById("view-playground"),
-        keys: document.getElementById("view-keys"),
-        telemetry: document.getElementById("view-telemetry")
-    };
-
-    Object.keys(navButtons).forEach(key => {
-        const btn = navButtons[key];
-        const view = views[key];
-
-        if (btn && view) {
-            btn.addEventListener("click", () => {
-                // Deactivate all
-                Object.values(navButtons).forEach(b => {
-                    b.classList.remove("active");
-                    b.removeAttribute("aria-current");
-                });
-                Object.values(views).forEach(v => v.classList.remove("active-view"));
-
-                // Activate clicked
-                btn.classList.add("active");
-                btn.setAttribute("aria-current", "page");
-                view.classList.add("active-view");
-
-                addLogLine("system", "Switched view to " + key.toUpperCase());
-            });
+    const get = id => document.getElementById(id);
+    const views = ["dashboard", "playground", "keys", "telemetry"];
+    const navigate = view => {
+        for (const name of views) {
+            const selected = name === view;
+            const button = get("nav-btn-" + name);
+            button.classList.toggle("active", selected);
+            get("view-" + name).classList.toggle("active-view", selected);
+            if (selected) button.setAttribute("aria-current", "page");
+            else button.removeAttribute("aria-current");
         }
+
+        get("view-" + view).querySelector("h1").focus();
+    };
+
+    for (const name of views) get("nav-btn-" + name).addEventListener("click", () => navigate(name));
+    get("open-console").addEventListener("click", () => navigate("playground"));
+
+    const activity = get("log-terminal-output");
+    const activityEmpty = get("activity-empty");
+    const clearLogs = get("btn-clear-logs");
+    const timeFormat = new Intl.DateTimeFormat(undefined, {
+        hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
     });
 
-    // ── TERMINAL LOG CONSOLE ──────────────────────────────────────────
-    const terminalOutput = document.getElementById("log-terminal-output");
-    const btnClearLogs = document.getElementById("btn-clear-logs");
+    function addActivity(type, message) {
+        const item = document.createElement("div");
+        item.className = "log-line";
+        if (["success", "error", "warning"].includes(type)) item.classList.add(type);
 
-    function addLogLine(type, text) {
-        if (!terminalOutput) return;
-        const line = document.createElement("div");
-        line.classList.add("log-line", type);
+        const now = new Date();
+        const time = document.createElement("time");
+        time.dateTime = now.toISOString();
+        time.textContent = timeFormat.format(now);
+        const text = document.createElement("span");
+        text.textContent = message;
 
-        const timestamp = new Date().toLocaleTimeString();
-        line.textContent = "[" + timestamp + "] [" + type.toUpperCase() + "] " + text;
-
-        terminalOutput.appendChild(line);
-        terminalOutput.scrollTop = terminalOutput.scrollHeight;
-
-        // Keep log size manageable (max 200 lines)
-        while (terminalOutput.children.length > 200) {
-            terminalOutput.removeChild(terminalOutput.firstChild);
-        }
+        item.append(time, text);
+        activity.append(item);
+        while (activity.childElementCount > 200) activity.firstElementChild.remove();
+        activity.scrollTop = activity.scrollHeight;
+        activityEmpty.hidden = true;
+        clearLogs.disabled = false;
     }
 
-    const unlockForm = document.getElementById("dashboard-unlock");
-    const tokenInput = document.getElementById("dashboard-token");
-    const unlockStatus = document.getElementById("dashboard-unlock-status");
-    let dashboardToken = "";
+    clearLogs.addEventListener("click", () => {
+        activity.replaceChildren();
+        activityEmpty.hidden = false;
+        clearLogs.disabled = true;
+    });
 
-    async function apiFetch(resource, options = {}) {
+    const unlockForm = get("dashboard-unlock");
+    const tokenInput = get("dashboard-token");
+    const unlockStatus = get("dashboard-unlock-status");
+    const accessStatus = get("telemetry-status");
+    const editToken = get("edit-token");
+    const chatStatus = get("chat-status");
+    let token = "";
+    let pollingToken = "";
+
+    function setAccess(state, message) {
+        accessStatus.parentElement.dataset.state = state;
+        if (accessStatus.textContent !== message) accessStatus.textContent = message;
+    }
+
+    async function apiFetch(resource, options = {}, credential = token) {
         const headers = new Headers(options.headers);
-        if (dashboardToken) headers.set("Authorization", `Bearer ${dashboardToken}`);
-        return fetch(resource, { ...options, headers, credentials: "omit", redirect: "error" });
+        headers.set("Authorization", "Bearer " + credential);
+        const response = await fetch(resource, { ...options, headers, credentials: "omit", redirect: "error" });
+
+        if (response.status === 401 && credential === token) {
+            token = "";
+            showTokenForm();
+            setAccess("locked", "Dashboard locked");
+            chatStatus.textContent = "Locked";
+            clearTelemetry();
+        }
+        return response;
     }
 
-    unlockForm.addEventListener("submit", async (event) => {
+    function showTokenForm() {
+        unlockForm.hidden = false;
+        editToken.hidden = true;
+    }
+
+    editToken.addEventListener("click", () => {
+        showTokenForm();
+        tokenInput.focus();
+    });
+
+    function requireAccess() {
+        if (token) return true;
+        showTokenForm();
+        unlockStatus.textContent = "Enter your token to continue.";
+        tokenInput.focus();
+        return false;
+    }
+
+    unlockForm.addEventListener("submit", async event => {
         event.preventDefault();
         const candidate = tokenInput.value.trim();
         tokenInput.value = "";
         const submit = unlockForm.querySelector("button");
         submit.disabled = true;
+
         try {
-            const response = await fetch("/api/auth/check", {
-                headers: { "Authorization": `Bearer ${candidate}` },
-                credentials: "omit",
-                redirect: "error",
-            });
-            if (response.ok) {
-                dashboardToken = candidate;
-                unlockStatus.textContent = "Dashboard unlocked.";
-                void pollTelemetry();
-            } else {
+            const response = await apiFetch("/api/auth/check", {}, candidate);
+            if (!response.ok) {
                 unlockStatus.textContent = response.status === 503 ? "Configure the server token first." : "Token rejected.";
+                tokenInput.focus();
+                return;
             }
+
+            token = candidate;
+            unlockStatus.textContent = "";
+            setAccess("connecting", "Loading telemetry");
+            if (chatStatus.dataset.state !== "working") chatStatus.textContent = "Ready";
+            const moveFocus = unlockForm.contains(document.activeElement);
+            unlockForm.hidden = true;
+            editToken.hidden = false;
+            if (moveFocus) editToken.focus({ preventScroll: true });
+            void refreshTelemetry();
         } catch {
             unlockStatus.textContent = "Could not reach the local dashboard.";
         } finally {
@@ -104,429 +128,289 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    if (btnClearLogs) {
-        btnClearLogs.addEventListener("click", () => {
-            if (terminalOutput) {
-                terminalOutput.replaceChildren();
-                addLogLine("system", "Log console cleared.");
-            }
+    const routingStatus = get("routing-status");
+    const routingFlow = get("routing-flow");
+    const routingContext = get("routing-context");
+    const chatForm = get("chat-input-form");
+    const chatInput = get("chat-user-prompt");
+    const chatSelect = get("chat-task-select");
+    const chatSend = get("chat-btn-submit");
+    const chatMessages = get("chat-messages-container");
+    const chatEmpty = get("chat-empty");
+    const codePreview = get("playground-preview-area");
+    const diffPlaceholder = codePreview.firstElementChild;
+
+    document.querySelectorAll("[data-prompt]").forEach(button => {
+        button.addEventListener("click", () => {
+            chatInput.value = button.dataset.prompt;
+            chatInput.focus();
+            chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
         });
-    }
+    });
 
-    // ── DYNAMIC SVG DAG VISUALIZER ────────────────────────────────────
-    const svgCanvas = document.getElementById("dag-canvas");
-    const svgNamespace = "http://www.w3.org/2000/svg";
-
-    const nodes = [
-        { id: "query", label: "User Prompt", x: 60, y: 200, role: "entry" },
-        { id: "router", label: "Task Router", x: 220, y: 200, role: "routing" },
-
-        // Task chains
-        { id: "speed", label: "Speed", x: 400, y: 60, role: "chain" },
-        { id: "reasoning", label: "Reasoning", x: 400, y: 130, role: "chain" },
-        { id: "code", label: "Code", x: 400, y: 200, role: "chain" },
-        { id: "write", label: "Write", x: 400, y: 270, role: "chain" },
-        { id: "pentest", label: "Pentest", x: 400, y: 340, role: "chain" },
-
-        // Output
-        { id: "cache", label: "Semantic Cache", x: 580, y: 170, role: "caching" },
-        { id: "output", label: "Response", x: 730, y: 200, role: "exit" }
-    ];
-
-    const connections = [
-        { from: "query", to: "router" },
-        { from: "router", to: "speed" },
-        { from: "router", to: "reasoning" },
-        { from: "router", to: "code" },
-        { from: "router", to: "write" },
-        { from: "router", to: "pentest" },
-
-        { from: "speed", to: "cache" },
-        { from: "reasoning", to: "cache" },
-        { from: "code", to: "cache" },
-        { from: "write", to: "cache" },
-        { from: "pentest", to: "cache" },
-        { from: "cache", to: "output" }
-    ];
-
-    function drawDAG(activeChainId, activeNodeId) {
-        if (!svgCanvas) return;
-        svgCanvas.replaceChildren(); // Safe clear
-
-        // 1. Draw edges
-        connections.forEach(conn => {
-            const fromNode = nodes.find(n => n.id === conn.from);
-            const toNode = nodes.find(n => n.id === conn.to);
-
-            if (fromNode && toNode) {
-                const line = document.createElementNS(svgNamespace, "path");
-                const cpx = (fromNode.x + toNode.x) / 2;
-                const d = "M " + fromNode.x + " " + fromNode.y
-                    + " C " + cpx + " " + fromNode.y
-                    + ", " + cpx + " " + toNode.y
-                    + ", " + toNode.x + " " + toNode.y;
-
-                line.setAttribute("d", d);
-                line.setAttribute("class", "dag-link");
-
-                const isActivePath =
-                    (conn.from === "query" && conn.to === "router") ||
-                    (conn.from === "router" && conn.to === activeChainId) ||
-                    (conn.from === activeChainId && conn.to === "cache") ||
-                    (conn.from === "cache" && conn.to === "output");
-
-                if (activeChainId && isActivePath) {
-                    line.classList.add("active");
-                }
-
-                svgCanvas.appendChild(line);
-            }
-        });
-
-        // 2. Draw nodes
-        nodes.forEach(node => {
-            const g = document.createElementNS(svgNamespace, "g");
-            g.setAttribute("class", "dag-node");
-
-            if (node.id === activeNodeId || (node.role === "chain" && node.id === activeChainId)) {
-                g.classList.add("active");
-            }
-
-            const circle = document.createElementNS(svgNamespace, "circle");
-            circle.setAttribute("cx", String(node.x));
-            circle.setAttribute("cy", String(node.y));
-            circle.setAttribute("r", node.role === "routing" ? "22" : "16");
-
-            const label = document.createElementNS(svgNamespace, "text");
-            label.setAttribute("x", String(node.x));
-            label.setAttribute("y", String(node.y + 32));
-            label.setAttribute("text-anchor", "middle");
-            label.textContent = node.label;
-
-            g.appendChild(circle);
-            g.appendChild(label);
-            svgCanvas.appendChild(g);
-        });
-    }
-
-    // Initial draw
-    drawDAG(null, null);
-
-    // ── INTERACTIVE PLAYGROUND CHAT ───────────────────────────────────
-    const chatForm = document.getElementById("chat-input-form");
-    const chatInput = document.getElementById("chat-user-prompt");
-    const chatSelect = document.getElementById("chat-task-select");
-    const chatMessages = document.getElementById("chat-messages-container");
-    const previewArea = document.getElementById("playground-preview-area");
-
-    if (chatForm && chatInput && chatMessages) {
-        chatForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const prompt = chatInput.value.trim();
-            const task = chatSelect ? chatSelect.value : "speed";
-
-            if (!prompt) return;
-
-            // Add user bubble
-            addChatBubble("user", prompt);
-            chatInput.value = "";
-
-            // Update DAG state
-            drawDAG(task, "router");
-            addLogLine("route", "Routing to chain: " + task.toUpperCase());
-
-            // Query backend
-            if (task === "agent") {
-                try {
-                    const response = await apiFetch("/api/mesh/execute", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ prompt: prompt, task: task })
-                    });
-                    const data = await response.json();
-                    
-                    if (data.status === "success") {
-                        addChatBubble("assistant", data.response);
-                        addLogLine("success", "Mesh execution completed in " + data.duration_ms + "ms.");
-                        if (data.logs && Array.isArray(data.logs)) {
-                            data.logs.forEach(logLine => {
-                                addLogLine(logLine.type, logLine.text);
-                            });
-                        }
-                    } else {
-                        addChatBubble("assistant", "ERROR: " + (data.detail || data.response || "Mesh execution failed."));
-                        addLogLine("error", "Mesh task execution failed.");
-                    }
-                } catch (err) {
-                    addChatBubble("assistant", "Connection error: " + err);
-                    addLogLine("error", "Failed to contact API backend.");
-                }
-            } else {
-                try {
-                    const response = await apiFetch("/api/execute/stream", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ prompt: prompt, task: task })
-                    });
-                    
-                    if (!response.ok) {
-                        addChatBubble("assistant", "ERROR: Failed to establish text stream.");
-                        addLogLine("error", "Failed to fetch model stream.");
-                        // Reset DAG and return
-                        drawDAG(null, null);
-                        return;
-                    }
-                    
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder("utf-8");
-                    let assistantBubble = addChatBubble("assistant", "");
-                    let fullText = "";
-                    
-                    addLogLine("info", "Receiving real-time stream tokens...");
-                    
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        
-                        const chunk = decoder.decode(value, { stream: true });
-                        fullText += chunk;
-                        assistantBubble.querySelector("p").textContent = fullText;
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                    }
-                    
-                    fullText += decoder.decode();
-                    assistantBubble.querySelector("p").textContent = fullText || "No response returned.";
-                    if (fullText.trim() && !fullText.trimStart().startsWith("ERROR:")) {
-                        addLogLine("success", "Response complete.");
-                    } else {
-                        addLogLine("error", "The provider did not return a response.");
-                    }
-                    
-                    // Render preview dynamically if a diff block is detected in the response
-                    if (fullText.includes("diff --git") || fullText.includes("+++")) {
-                        const diffLines = fullText.split("\n").filter(line => line.startsWith("+") || line.startsWith("-") || line.startsWith("@@") || line.startsWith("diff")).slice(0, 20);
-                        renderDiffPreview(diffLines);
-                    }
-                } catch (err) {
-                    addChatBubble("assistant", "Connection error: " + err);
-                    addLogLine("error", "Failed to contact API backend.");
-                }
-            }
-
-            // Reset DAG
-            drawDAG(null, null);
-            void pollTelemetry();
-        });
-    }
-
-    function addChatBubble(role, text) {
-        if (!chatMessages) return;
-        const bubble = document.createElement("div");
-        bubble.classList.add("chat-bubble", role);
-        const p = document.createElement("p");
-        p.textContent = text;
-
-        bubble.appendChild(p);
-        chatMessages.appendChild(bubble);
+    function appendMessage(role, text) {
+        chatEmpty.hidden = true;
+        const message = document.createElement("div");
+        message.classList.add("chat-bubble", role);
+        const body = document.createElement("p");
+        body.textContent = text;
+        message.append(body);
+        chatMessages.append(message);
         chatMessages.scrollTop = chatMessages.scrollHeight;
-        return bubble;
+        return body;
     }
 
-    function renderDiffPreview(diffLines) {
-        if (!previewArea) return;
-        previewArea.replaceChildren(); // Safe clear
+    async function renderStream(response) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        const bubble = appendMessage("assistant", "");
+        let result = "";
 
-        const container = document.createElement("div");
-        container.classList.add("diff-container");
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            result += decoder.decode(value, { stream: true });
+            bubble.textContent = result;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
 
-        diffLines.forEach(line => {
-            const div = document.createElement("div");
-            div.classList.add("diff-line");
-            if (line.startsWith("+")) {
-                div.classList.add("add");
-            } else if (line.startsWith("-")) {
-                div.classList.add("del");
-            } else {
-                div.classList.add("normal");
-            }
-            div.textContent = line;
-            container.appendChild(div);
-        });
-
-        previewArea.appendChild(container);
+        result += decoder.decode();
+        bubble.textContent = result || "The model returned an empty response.";
+        return result.trim();
     }
 
-    // ── REFRESH BUTTON ────────────────────────────────────────────────
-    const btnRefresh = document.getElementById("btn-refresh-telemetry");
-    if (btnRefresh) {
-        btnRefresh.addEventListener("click", () => {
-            pollTelemetry();
-            addLogLine("info", "Telemetry data refreshed.");
-        });
+    function renderDiff(result) {
+        if (!result.includes("diff --git") && !result.includes("+++")) return;
+        const diff = document.createElement("div");
+        diff.className = "diff-container";
+        const lines = result.split("\n").filter(line => /^(diff |@@|[+-])/.test(line)).slice(0, 20);
+        for (const line of lines) {
+            const item = document.createElement("div");
+            item.className = "diff-line";
+            if (line.startsWith("+")) item.classList.add("add");
+            else if (line.startsWith("-")) item.classList.add("del");
+            item.textContent = line;
+            diff.append(item);
+        }
+        codePreview.replaceChildren(diff);
     }
 
-    // ── SECRET COMMIT ENGINE ──────────────────────────────────────────
-    const keysForm = document.getElementById("keys-manager-form");
-    const saveStatus = document.getElementById("keys-save-status");
+    function setRunInProgress(active) {
+        chatSend.disabled = active;
+        chatStatus.textContent = active ? "Running" : token ? "Ready" : "Locked";
+        chatStatus.dataset.state = active ? "working" : "";
+        routingStatus.textContent = active ? "Routing" : "Idle";
+        routingStatus.dataset.state = active ? "working" : "";
+        routingFlow.dataset.state = active ? "working" : "";
+    }
 
-    if (keysForm) {
-        keysForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
+    chatForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        const prompt = chatInput.value.trim();
+        if (!prompt || chatSend.disabled || !requireAccess()) return;
 
-            const secrets = {
-                groq: document.getElementById("key-input-groq").value.trim(),
-                gemini: document.getElementById("key-input-gemini").value.trim(),
-                openrouter: document.getElementById("key-input-openrouter").value.trim(),
-                deepseek: document.getElementById("key-input-deepseek").value.trim(),
-                cerebras: document.getElementById("key-input-cerebras").value.trim(),
-                composio: document.getElementById("key-input-composio").value.trim()
-            };
+        const selected = chatSelect.selectedOptions[0];
+        const task = selected.value;
+        const route = selected.textContent;
+        chatInput.value = "";
+        appendMessage("user", prompt);
+        codePreview.replaceChildren(diffPlaceholder);
+        routingContext.textContent = "Selected route · " + route;
+        setRunInProgress(true);
+        addActivity("route", "Prompt sent to " + route + ".");
 
-            if (saveStatus) {
-                saveStatus.textContent = "Saving...";
-                saveStatus.className = "save-status-text";
-            }
+        try {
+            const isMesh = task === "agent";
+            const response = await apiFetch(isMesh ? "/api/mesh/execute" : "/api/execute/stream", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt, task })
+            });
 
-            try {
-                const response = await apiFetch("/api/keys", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(secrets)
-                });
-
+            if (!response.ok) {
+                appendMessage("assistant", response.status === 401 ? "Unlock the dashboard and try again." : "The server could not start this task.");
+                addActivity("error", "Request failed (HTTP " + response.status + ").");
+            } else if (isMesh) {
                 const data = await response.json();
-
-                if (data.status === "success") {
-                    if (saveStatus) {
-                        saveStatus.textContent = data.updated ? `Saved ${data.updated} provider key(s).` : "No keys changed.";
-                        saveStatus.className = "save-status-text success";
-                    }
-                    if (data.updated) {
-                        addLogLine("success", "Provider keys updated.");
-                        void pollTelemetry();
-                    }
-
-                    // Clear inputs for security
-                    document.querySelectorAll("#keys-manager-form input").forEach(input => {
-                        input.value = "";
-                    });
+                appendMessage("assistant", data.response || data.detail || "No response returned.");
+                for (const entry of data.logs || []) addActivity(entry.type, entry.text);
+                if (data.status === "success") addActivity("success", "Agent run completed.");
+                else addActivity("error", "Agent run failed.");
+            } else {
+                const result = await renderStream(response);
+                if (result && !result.startsWith("ERROR:")) {
+                    renderDiff(result);
+                    addActivity("success", "Response completed.");
                 } else {
-                    if (saveStatus) {
-                        saveStatus.textContent = typeof data.detail === "string" ? data.detail : "Save failed.";
-                        saveStatus.className = "save-status-text error";
-                    }
-                }
-            } catch (err) {
-                if (saveStatus) {
-                    saveStatus.textContent = "Failed to save configuration.";
-                    saveStatus.className = "save-status-text error";
+                    addActivity("error", "The model did not complete the response.");
                 }
             }
-        });
+        } catch {
+            appendMessage("assistant", "The connection ended before the task completed.");
+            addActivity("error", "The task connection ended early.");
+        } finally {
+            setRunInProgress(false);
+            void refreshTelemetry();
+        }
+    });
+
+    const keysForm = get("keys-manager-form");
+    const saveKeys = get("btn-save-keys");
+    const saveStatus = get("keys-save-status");
+    const keyFields = ["groq", "gemini", "openrouter", "deepseek", "cerebras", "composio"];
+    const keyInputs = keyFields.map(key => get("key-input-" + key));
+
+    keysForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (saveKeys.disabled || !requireAccess()) return;
+
+        const values = Object.fromEntries(keyFields.map((key, index) => [key, keyInputs[index].value.trim()]));
+        saveKeys.disabled = true;
+        keyInputs.forEach(input => { input.readOnly = true; });
+        saveStatus.textContent = "Saving…";
+        saveStatus.className = "feedback";
+
+        try {
+            const response = await apiFetch("/api/keys", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(values)
+            });
+            const data = await response.json();
+            if (response.ok && data.status === "success") {
+                saveStatus.textContent = data.updated ? "Provider keys saved." : "No keys changed.";
+                saveStatus.classList.add("success");
+                keysForm.reset();
+                if (data.updated) {
+                    addActivity("success", "Provider keys saved.");
+                    void refreshTelemetry();
+                }
+            } else {
+                saveStatus.textContent = response.status === 401 ? "Unlock the dashboard and try again." :
+                    typeof data.detail === "string" ? data.detail : "Could not save keys.";
+                saveStatus.classList.add("error");
+            }
+        } catch {
+            saveStatus.textContent = "Could not reach the local dashboard.";
+            saveStatus.classList.add("error");
+        } finally {
+            saveKeys.disabled = false;
+            keyInputs.forEach(input => { input.readOnly = false; });
+        }
+    });
+
+    const providerRows = get("provider-status-rows");
+    const cooldowns = get("cooldowns-list-container");
+    const statIds = ["completed", "duration", "cache-rate", "keys-count", "errors-count", "cache-size", "cooldowns-count"];
+    const providerNames = {
+        groq: "Groq", gemini: "Gemini", openrouter: "OpenRouter", deepseek: "DeepSeek",
+        cerebras: "Cerebras", nvidia: "NVIDIA", ollama: "Ollama", perplexity: "Perplexity"
+    };
+
+    function textElement(tag, text, className) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        element.textContent = text;
+        return element;
     }
 
-    // ── TELEMETRY POLLING ─────────────────────────────────────────────
-    const completedElem = document.getElementById("telemetry-completed");
-    const durationElem = document.getElementById("telemetry-duration");
-    const errorsElem = document.getElementById("telemetry-errors-count");
-    const cacheRateElem = document.getElementById("telemetry-cache-rate");
-    const keysCountElem = document.getElementById("telemetry-keys-count");
-    const cacheSizeElem = document.getElementById("telemetry-cache-size");
-    const cooldownContainer = document.getElementById("cooldowns-list-container");
-    const providerRows = document.getElementById("provider-status-rows");
-    const telemetryStatus = document.getElementById("telemetry-status");
-    let pollingTelemetry = false;
+    function providerEmpty(message) {
+        const row = document.createElement("tr");
+        const cell = textElement("td", message);
+        cell.colSpan = 3;
+        row.append(cell);
+        providerRows.replaceChildren(row);
+    }
 
     function renderProviders(providers) {
+        if (!providers.length) {
+            providerEmpty("The router has no provider entries.");
+            return;
+        }
+
         const rows = document.createDocumentFragment();
         for (const provider of providers) {
             const row = document.createElement("tr");
-            const name = document.createElement("th");
+            const name = textElement("th", providerNames[provider.name] || provider.name);
             name.scope = "row";
-            name.textContent = provider.name;
-            const models = document.createElement("td");
-            models.textContent = provider.models.join(", ");
-            const status = document.createElement("td");
+            const models = textElement("td", provider.models.join(", "));
+            const configuration = document.createElement("td");
+            const status = textElement("span", "Key missing", "pill");
+
             if (provider.local) {
                 status.textContent = "Local endpoint (unverified)";
-            } else if (provider.configured_keys === 0) {
-                status.textContent = "Key missing";
             } else if (provider.cooling_keys > 0) {
-                status.textContent = `${provider.cooling_keys} of ${provider.configured_keys} keys cooling down`;
-            } else {
+                status.textContent = provider.cooling_keys + " of " + provider.configured_keys + " keys cooling down";
+                status.dataset.state = "warning";
+            } else if (provider.configured_keys > 0) {
                 status.textContent = "Configured";
+                status.dataset.state = "configured";
             }
-            row.append(name, models, status);
+
+            configuration.append(status);
+            row.append(name, models, configuration);
             rows.append(row);
         }
         providerRows.replaceChildren(rows);
     }
 
-    async function pollTelemetry() {
-        if (!dashboardToken || pollingTelemetry) return;
-        pollingTelemetry = true;
+    function renderCooldowns(entries) {
+        if (!entries.length) {
+            cooldowns.replaceChildren(textElement("p", "No cooldowns reported.", "section-note"));
+            return;
+        }
+
+        const rows = entries.map(([key, seconds]) => {
+            const item = document.createElement("div");
+            item.className = "cooldown-badge";
+            item.append(textElement("span", key, "cooldown-name"),
+                textElement("span", Math.ceil(seconds) + "s remaining", "cooldown-time"));
+            return item;
+        });
+        cooldowns.replaceChildren(...rows);
+    }
+
+    function clearTelemetry() {
+        for (const id of statIds) get("telemetry-" + id).textContent = "—";
+        providerEmpty("Unlock the dashboard to see provider configuration.");
+        cooldowns.replaceChildren(textElement("p", "Unlock the dashboard to see active cooldowns.", "section-note"));
+    }
+
+    async function refreshTelemetry() {
+        const credential = token;
+        if (!credential || pollingToken === credential) return false;
+        pollingToken = credential;
+
         try {
-            const response = await apiFetch("/api/telemetry");
-            if (response.status === 401) {
-                dashboardToken = "";
-                telemetryStatus.textContent = "Dashboard locked";
-                return;
-            }
-            if (!response.ok) {
-                telemetryStatus.textContent = "Telemetry unavailable";
-                return;
-            }
-
+            const response = await apiFetch("/api/telemetry", {}, credential);
+            if (token !== credential) return false;
+            if (!response.ok) throw new Error("Telemetry request failed.");
             const data = await response.json();
+            if (token !== credential) return false;
 
-            // Update stat cards
-            if (completedElem) completedElem.textContent = data.completed_runs;
-            if (durationElem) durationElem.textContent = data.last_run_duration_ms === null ? "—" : data.last_run_duration_ms + " ms";
-            if (errorsElem) errorsElem.textContent = data.failed_runs;
-            if (cacheRateElem) cacheRateElem.textContent = data.cache_hit_rate_pct === null ? "—" : data.cache_hit_rate_pct + "%";
-            if (keysCountElem) keysCountElem.textContent = data.keys_configured;
-            if (cacheSizeElem) cacheSizeElem.textContent = data.cache_entries + " entries";
+            const entries = Object.entries(data.active_cooldowns);
+            const values = [data.completed_runs,
+                data.last_run_duration_ms === null ? "—" : data.last_run_duration_ms + " ms",
+                data.cache_hit_rate_pct === null ? "—" : data.cache_hit_rate_pct + "%",
+                data.keys_configured, data.failed_runs, data.cache_entries, entries.length];
+            statIds.forEach((id, index) => { get("telemetry-" + id).textContent = values[index]; });
             renderProviders(data.providers);
-            telemetryStatus.textContent = "Telemetry connected";
-
-            // Update cooldowns
-            if (cooldownContainer) {
-                cooldownContainer.replaceChildren(); // Safe clear
-                const cds = data.active_cooldowns;
-
-                if (Object.keys(cds).length === 0) {
-                    const p = document.createElement("p");
-                    p.classList.add("cooldown-empty-msg");
-                    p.textContent = "No cooldowns reported.";
-                    cooldownContainer.appendChild(p);
-                } else {
-                    Object.entries(cds).forEach(([key, sec]) => {
-                        const badge = document.createElement("div");
-                        badge.classList.add("cooldown-badge");
-
-                        const nameSpan = document.createElement("span");
-                        nameSpan.classList.add("cooldown-name");
-                        nameSpan.textContent = key;
-
-                        const timeSpan = document.createElement("span");
-                        timeSpan.classList.add("cooldown-time");
-                        timeSpan.textContent = Math.round(sec) + "s remaining";
-
-                        badge.appendChild(nameSpan);
-                        badge.appendChild(timeSpan);
-                        cooldownContainer.appendChild(badge);
-                    });
-                }
-            }
-
+            renderCooldowns(entries);
+            setAccess("connected", "Connected");
+            return true;
         } catch {
-            telemetryStatus.textContent = "Telemetry unavailable";
+            if (token === credential) setAccess("unavailable", "Telemetry unavailable");
+            return false;
         } finally {
-            pollingTelemetry = false;
+            if (pollingToken === credential) pollingToken = "";
         }
     }
 
-    // Poll telemetry every 5 seconds
-    setInterval(pollTelemetry, 5000);
-    pollTelemetry();
+    for (const button of document.querySelectorAll("[data-refresh]")) {
+        button.addEventListener("click", async () => {
+            if (requireAccess() && await refreshTelemetry()) addActivity("info", "Telemetry refreshed.");
+        });
+    }
+
+    setInterval(refreshTelemetry, 5000);
 });

@@ -76,6 +76,9 @@ def verify_dashboard(process: subprocess.Popen, client: httpx.Client, token: str
     assert dashboard.status_code == 200 and "dashboard-unlock" in dashboard.text
     assert "--glass-shadow" in client.get("/style.css").text
     assert client.get("/app.js").status_code == 200
+    assert '<symbol id="overview"' in client.get("/icons.svg").text
+    assert '<linearGradient id="face"' in client.get("/mark.svg").text
+    assert client.get("/mesh-glass.png").content.startswith(b"\x89PNG\r\n\x1a\n")
     assert client.get("/", headers={"Host": "invalid.example"}).status_code == 400
     assert client.get("/api/telemetry").status_code == 401
     headers = {"Authorization": f"Bearer {token}"}

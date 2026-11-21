@@ -1,358 +1,285 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="M4STCLAW v3.6 — Enterprise AI Mesh Network Dashboard. Monitor task routing, provider health, API key rotation, and system telemetry.">
-    <title>M4STCLAW — AI Mesh Dashboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="M4STCLAW local workspace for model routing, provider keys, and telemetry.">
+    <title>M4STCLAW</title>
+    <link rel="icon" href="mark.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <!-- Main App Grid -->
+    <a class="skip-link" href="#workspace">Skip to workspace</a>
     <div class="app-container">
-
-        <!-- Sidebar Navigation -->
-        <aside class="app-sidebar" aria-label="Navigation Sidebar">
+        <aside class="app-sidebar">
             <div class="sidebar-header">
-                <span class="logo-icon" aria-hidden="true">M</span>
-                <h1 class="logo-text">M4STCLAW</h1>
-                <span class="logo-version">v3.6</span>
+                <img class="brand-mark" src="mark.svg" alt="" width="39" height="39">
+                <div>
+                    <div class="brand-name">M4STCLAW</div>
+                    <div class="brand-context">Local workspace</div>
+                </div>
             </div>
 
-            <nav class="sidebar-nav" aria-label="Main Navigation">
-                <span class="nav-section-label">Overview</span>
-                <button id="nav-btn-dashboard" class="nav-item active" type="button" aria-current="page">
-                    <span class="nav-icon">📊</span> Dashboard
+            <nav class="sidebar-nav" aria-label="Workspace">
+                <button type="button" class="nav-item active" id="nav-btn-dashboard" aria-controls="view-dashboard" aria-current="page">
+                    <svg class="icon" aria-hidden="true"><use href="icons.svg#overview"></use></svg> <span>Overview</span>
                 </button>
-                <button id="nav-btn-playground" class="nav-item" type="button">
-                    <span class="nav-icon">💬</span> AI Console
+                <button type="button" class="nav-item" id="nav-btn-playground" aria-controls="view-playground">
+                    <svg class="icon" aria-hidden="true"><use href="icons.svg#console"></use></svg> <span>AI Console</span>
                 </button>
-
-                <span class="nav-section-label">Configuration</span>
-                <button id="nav-btn-keys" class="nav-item" type="button">
-                    <span class="nav-icon">🔑</span> API Keys
+                <button type="button" class="nav-item" id="nav-btn-keys" aria-controls="view-keys">
+                    <svg class="icon" aria-hidden="true"><use href="icons.svg#keys"></use></svg> <span>API Keys</span>
                 </button>
-                <button id="nav-btn-telemetry" class="nav-item" type="button">
-                    <span class="nav-icon">📈</span> Telemetry
+                <button type="button" class="nav-item" id="nav-btn-telemetry" aria-controls="view-telemetry">
+                    <svg class="icon" aria-hidden="true"><use href="icons.svg#activity"></use></svg> <span>Telemetry</span>
                 </button>
             </nav>
 
             <div class="sidebar-footer">
-                <form id="dashboard-unlock">
-                    <label for="dashboard-token">Dashboard token</label>
-                    <input id="dashboard-token" type="password" required autocomplete="off" spellcheck="false">
-                    <button class="action-btn primary" type="submit">Unlock</button>
-                    <p id="dashboard-unlock-status" role="status"></p>
-                </form>
-                <div class="status-indicator">
-                    <span class="indicator-dot green"></span>
-                    <span id="telemetry-status" class="status-text">Dashboard locked</span>
-                </div>
-                <div class="env-indicator">
-                    <span>Environment:</span>
-                    <span class="env-badge">Local</span>
+                <div class="access-card">
+                    <div class="status-indicator" data-state="locked">
+                        <span class="indicator-dot" aria-hidden="true"></span>
+                        <span id="telemetry-status">Dashboard locked</span>
+                        <button type="button" id="edit-token" class="button quiet" hidden>Change token</button>
+                    </div>
+                    <form id="dashboard-unlock">
+                        <label for="dashboard-token">Dashboard token</label>
+                        <div class="token-field">
+                            <svg class="icon" aria-hidden="true"><use href="icons.svg#lock"></use></svg>
+                            <input id="dashboard-token" type="password" placeholder="Enter token" required autocomplete="off" spellcheck="false" aria-describedby="dashboard-unlock-status">
+                        </div>
+                        <button class="button primary unlock-button" type="submit">Unlock <svg class="icon" aria-hidden="true"><use href="icons.svg#arrow"></use></svg></button>
+                        <p id="dashboard-unlock-status" class="feedback" role="status"></p>
+                    </form>
                 </div>
             </div>
         </aside>
 
-        <!-- Main Content Area -->
-        <main class="app-main">
-
-            <!-- ============================================================ -->
-            <!-- DASHBOARD VIEW                                               -->
-            <!-- ============================================================ -->
+        <main id="workspace" class="app-main" tabindex="-1">
             <section id="view-dashboard" class="main-view active-view" aria-labelledby="dashboard-title">
-                <div class="view-header">
-                    <div class="view-header-left">
-                        <h2 id="dashboard-title" class="view-title">Agent Mesh Dashboard</h2>
-                        <p class="view-desc">Task routing, provider configuration, and cache activity.</p>
+                <header class="hero">
+                    <div class="hero-copy">
+                        <h1 id="dashboard-title" tabindex="-1">Overview</h1>
+                        <p>See run metrics, selected routes, and configured model providers.</p>
+                        <div class="actions">
+                            <button class="button primary" id="open-console" type="button">Open console <svg class="icon" aria-hidden="true"><use href="icons.svg#arrow"></use></svg></button>
+                            <button class="button secondary" id="btn-refresh-telemetry" type="button" data-refresh><svg class="icon" aria-hidden="true"><use href="icons.svg#refresh"></use></svg> Refresh</button>
+                        </div>
                     </div>
-                    <div class="quick-actions">
-                        <button id="btn-refresh-telemetry" class="action-btn" type="button">↻ Refresh</button>
+                </header>
+
+                <dl class="stats-grid" aria-label="Run and configuration metrics">
+                    <div class="stat-card">
+                        <dt><span class="tile-icon mint"><svg class="icon" aria-hidden="true"><use href="icons.svg#check"></use></svg></span><span>Completed runs</span></dt>
+                        <dd id="telemetry-completed">—</dd>
                     </div>
+                    <div class="stat-card">
+                        <dt><span class="tile-icon sky"><svg class="icon" aria-hidden="true"><use href="icons.svg#clock"></use></svg></span><span>Last run duration</span></dt>
+                        <dd id="telemetry-duration">—</dd>
+                    </div>
+                    <div class="stat-card">
+                        <dt><span class="tile-icon iris"><svg class="icon" aria-hidden="true"><use href="icons.svg#layers"></use></svg></span><span>Cache hit rate</span></dt>
+                        <dd id="telemetry-cache-rate">—</dd>
+                    </div>
+                    <div class="stat-card">
+                        <dt><span class="tile-icon amber"><svg class="icon" aria-hidden="true"><use href="icons.svg#keys"></use></svg></span><span>Configured keys</span></dt>
+                        <dd id="telemetry-keys-count">—</dd>
+                    </div>
+                </dl>
+
+                <div class="overview-grid">
+                    <section class="panel">
+                        <header class="panel-header">
+                            <div class="panel-heading">
+                                <svg class="icon" aria-hidden="true"><use href="icons.svg#route"></use></svg>
+                                <h2>Task routing</h2>
+                            </div>
+                            <span id="routing-status" class="pill" role="status">Idle</span>
+                        </header>
+                        <ol class="routing-flow" aria-label="Request stages" id="routing-flow">
+                            <li><span class="stage-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#prompt"></use></svg></span><span>Prompt</span></li>
+                            <li><span class="stage-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#route"></use></svg></span><span>Router</span></li>
+                            <li><span class="stage-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#layers"></use></svg></span><span>Model chain</span></li>
+                            <li><span class="stage-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#check"></use></svg></span><span>Response</span></li>
+                        </ol>
+                        <p id="routing-context" class="routing-note">Run a task in AI Console to see its selected route.</p>
+                    </section>
+
+                    <section class="panel activity-panel">
+                        <header class="panel-header">
+                            <div class="panel-heading"><svg class="icon" aria-hidden="true"><use href="icons.svg#log"></use></svg> <h2>Recent activity</h2></div>
+                            <button id="btn-clear-logs" class="button quiet" type="button" disabled>Clear</button>
+                        </header>
+                        <div id="log-terminal-output" class="activity-list" role="log" aria-label="Session activity"></div>
+                        <div id="activity-empty" class="activity-empty">
+                            <span class="empty-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#activity"></use></svg></span>
+                            <p>Activity from this tab will appear here.</p>
+                        </div>
+                    </section>
                 </div>
 
-                <div class="view-body">
-                    <!-- Stats Cards -->
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon blue">✓</div>
-                            <div class="stat-info">
-                                <span class="stat-label">Completed Runs</span>
-                                <span id="telemetry-completed" class="stat-value">—</span>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon green">⚡</div>
-                            <div class="stat-info">
-                                <span class="stat-label">Last Run Duration</span>
-                                <span id="telemetry-duration" class="stat-value">—</span>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon purple">🎯</div>
-                            <div class="stat-info">
-                                <span class="stat-label">Cache Hit Rate</span>
-                                <span id="telemetry-cache-rate" class="stat-value">—</span>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon amber">🔄</div>
-                            <div class="stat-info">
-                                <span class="stat-label">Configured Keys</span>
-                                <span id="telemetry-keys-count" class="stat-value">—</span>
-                            </div>
-                        </div>
+                <section class="panel provider-panel">
+                    <header class="panel-header">
+                        <div class="panel-heading"><svg class="icon" aria-hidden="true"><use href="icons.svg#providers"></use></svg> <h2>Model providers</h2></div>
+                    </header>
+                    <div class="table-scroll" role="region" aria-label="Model provider configuration" tabindex="0">
+                        <table class="provider-table">
+                            <thead><tr><th scope="col">Provider</th><th scope="col">Models in router</th><th scope="col">Configuration</th></tr></thead>
+                            <tbody id="provider-status-rows">
+                                <tr><td colspan="3">Unlock the dashboard to see provider configuration.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <!-- DAG + Logs Split -->
-                    <div class="dashboard-split">
-                        <!-- Execution DAG -->
-                        <div class="panel-card">
-                            <div class="card-header">
-                                <h3 class="card-title">
-                                    <span class="card-title-icon">🔀</span> Task Routing DAG
-                                </h3>
-                            </div>
-                            <div class="card-body dag-canvas-wrapper">
-                                <svg id="dag-canvas" width="100%" height="100%" viewBox="0 0 800 400" aria-label="Visual Directed Acyclic Graph of active agents"></svg>
-                            </div>
-                        </div>
-
-                        <!-- Log Terminal -->
-                        <div class="panel-card">
-                            <div class="card-header">
-                                <h3 class="card-title">
-                                    <span class="card-title-icon">📋</span> Activity Log
-                                </h3>
-                                <div class="card-actions">
-                                    <button id="btn-clear-logs" class="card-action-btn" type="button">Clear</button>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="log-terminal-output" class="terminal-body" aria-live="polite">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Provider Status Table -->
-                    <div class="dashboard-split-full">
-                        <div class="panel-card">
-                            <div class="card-header">
-                                <h3 class="card-title">
-                                    <span class="card-title-icon">🏢</span> Provider Status
-                                </h3>
-                            </div>
-                            <div class="card-body">
-                                <table class="provider-table" id="provider-status-table">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Provider</th>
-                                            <th scope="col">Models in Router</th>
-                                            <th scope="col">Configuration</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="provider-status-rows">
-                                        <tr><td colspan="3">Unlock the dashboard to see provider configuration.</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                </section>
             </section>
 
-            <!-- ============================================================ -->
-            <!-- INTERACTIVE AI CONSOLE VIEW                                  -->
-            <!-- ============================================================ -->
             <section id="view-playground" class="main-view" aria-labelledby="playground-title">
-                <div class="view-header">
-                    <div class="view-header-left">
-                        <h2 id="playground-title" class="view-title">AI Console</h2>
-                        <p class="view-desc">Execute tasks through the multi-provider routing engine.</p>
+                <header class="page-heading">
+                    <div>
+                        <h1 id="playground-title" tabindex="-1">AI Console</h1>
+                        <p>Choose a route and send a prompt to a model.</p>
                     </div>
-                </div>
-
-                <div class="view-body">
-                    <div class="playground-layout">
-                        <!-- Chat Container -->
-                        <div class="chat-container">
-                            <div id="chat-messages-container" class="chat-messages" aria-live="polite">
-                                <div class="chat-bubble assistant">
-                                    <p>M4STCLAW ready. Select a routing chain and execute your task.</p>
+                </header>
+                <div class="console-layout">
+                    <section class="panel console-panel" aria-label="Conversation">
+                        <header class="panel-header">
+                            <div class="panel-heading"><svg class="icon" aria-hidden="true"><use href="icons.svg#prompt"></use></svg> <h2>Conversation</h2></div>
+                            <span id="chat-status" class="pill" role="status">Locked</span>
+                        </header>
+                        <div id="chat-messages-container" class="chat-messages" role="log" aria-label="Conversation messages">
+                            <div id="chat-empty" class="chat-empty">
+                                <span class="empty-icon"><svg class="icon" aria-hidden="true"><use href="icons.svg#spark"></use></svg></span>
+                                <h2>Start with a prompt</h2>
+                                <div class="prompt-suggestions" aria-label="Example prompts">
+                                    <button type="button" class="button secondary" data-prompt="Turn these notes into a short release summary: ">Draft release notes <svg class="icon" aria-hidden="true"><use href="icons.svg#arrow"></use></svg></button>
+                                    <button type="button" class="button secondary" data-prompt="Explain this JavaScript error and show a fix: ">Explain a code error <svg class="icon" aria-hidden="true"><use href="icons.svg#arrow"></use></svg></button>
+                                    <button type="button" class="button secondary" data-prompt="Extract decisions and next steps from these meeting notes: ">Summarize notes <svg class="icon" aria-hidden="true"><use href="icons.svg#arrow"></use></svg></button>
                                 </div>
                             </div>
-
-                            <!-- Chat Input -->
-                            <form id="chat-input-form" class="chat-input-bar">
-                                <div class="input-options">
-                                    <label for="chat-task-select" class="visually-hidden">Task Routing Chain</label>
-                                    <select id="chat-task-select" class="chat-select">
-                                        <option value="speed">⚡ Speed — Cerebras/Groq</option>
-                                        <option value="reasoning">🧠 Reasoning — DeepSeek R1/Gemini</option>
-                                        <option value="code">💻 Code — DeepSeek/Qwen</option>
-                                        <option value="vision">👁️ Vision — Gemini/LLaVA</option>
-                                        <option value="research">🔍 Research — Perplexity/Gemini</option>
-                                        <option value="agent">🤖 Agent — DeepSeek R1/Ollama</option>
-                                        <option value="write">✍️ Write — Cerebras/Groq</option>
-                                        <option value="pentest">🛡️ Pentest — Nmap/Nuclei</option>
-                                        <option value="offline">📴 Offline — Ollama Local</option>
+                        </div>
+                        <form id="chat-input-form" class="chat-input-bar">
+                            <label class="visually-hidden" for="chat-user-prompt">Prompt</label>
+                            <textarea id="chat-user-prompt" rows="3" placeholder="Enter a prompt…" required></textarea>
+                            <div class="composer-actions">
+                                <label class="route-control" for="chat-task-select">
+                                    <svg class="icon" aria-hidden="true"><use href="icons.svg#route"></use></svg>
+                                    <span class="visually-hidden">Task route</span>
+                                    <select id="chat-task-select">
+                                        <option value="speed">Speed</option>
+                                        <option value="reasoning">Reasoning</option>
+                                        <option value="code">Code</option>
+                                        <option value="vision">Vision</option>
+                                        <option value="research">Research</option>
+                                        <option value="agent">Agent</option>
+                                        <option value="write">Writing</option>
+                                        <option value="offline">Offline</option>
                                     </select>
-                                </div>
-                                <div class="input-wrapper">
-                                    <input id="chat-user-prompt" type="text" placeholder="Describe your task... (e.g., write a Python sort function)" required aria-label="Task prompt input">
-                                    <button id="chat-btn-submit" class="chat-submit-btn" type="submit">Execute</button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Side Preview Panel -->
-                        <div class="playground-side-panel">
-                            <div class="panel-card" style="height:100%;">
-                                <div class="card-header">
-                                    <h3 class="card-title">
-                                        <span class="card-title-icon">🖥️</span> Output Preview
-                                    </h3>
-                                </div>
-                                <div class="card-body preview-body">
-                                    <div id="playground-preview-area">
-                                        <p class="preview-placeholder">Code diffs, screenshots, and visual outputs will appear here during execution.</p>
-                                    </div>
-                                </div>
+                                    <svg class="icon select-chevron" aria-hidden="true"><use href="icons.svg#chevron-down"></use></svg>
+                                </label>
+                                <button id="chat-btn-submit" class="button primary" type="submit"><svg class="icon" aria-hidden="true"><use href="icons.svg#send"></use></svg> Send prompt</button>
                             </div>
+                        </form>
+                    </section>
+                    <section class="panel result-panel">
+                        <header class="panel-header">
+                            <div class="panel-heading"><svg class="icon" aria-hidden="true"><use href="icons.svg#code"></use></svg> <h2>Code diff</h2></div>
+                        </header>
+                        <div id="playground-preview-area" class="result-content">
+                            <p>When a response contains a code diff, its changes appear here.</p>
                         </div>
-                    </div>
+                    </section>
                 </div>
             </section>
 
-            <!-- ============================================================ -->
-            <!-- API KEY MANAGER VIEW                                         -->
-            <!-- ============================================================ -->
             <section id="view-keys" class="main-view" aria-labelledby="keys-title">
-                <div class="view-header">
-                    <div class="view-header-left">
-                        <h2 id="keys-title" class="view-title">API Key Configuration</h2>
-                        <p class="view-desc">Enter only the keys you want to change. Blank fields keep their current values.</p>
+                <header class="page-heading">
+                    <div>
+                        <h1 id="keys-title" tabindex="-1">API Keys</h1>
+                        <p>Update provider credentials. Blank fields keep the current keys.</p>
                     </div>
-                </div>
-
-                <div class="view-body">
-                    <div class="keys-layout">
-                        <div class="panel-card">
-                            <div class="card-header">
-                                <h3 class="card-title">
-                                    <span class="card-title-icon">🔐</span> Environment Secrets
-                                </h3>
-                            </div>
-                            <div class="card-body">
-                                <form id="keys-manager-form" class="keys-grid-form">
-                                    <div class="keys-grid">
-                                        <div class="form-group">
-                                            <label for="key-input-groq">Groq API Key</label>
-                                            <input id="key-input-groq" type="password" placeholder="gsk_..." autocomplete="off">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="key-input-gemini">Gemini API Key</label>
-                                            <input id="key-input-gemini" type="password" placeholder="AIzaSy..." autocomplete="off">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="key-input-openrouter">OpenRouter API Key</label>
-                                            <input id="key-input-openrouter" type="password" placeholder="sk-or-v1-..." autocomplete="off">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="key-input-deepseek">DeepSeek API Key</label>
-                                            <input id="key-input-deepseek" type="password" placeholder="sk-..." autocomplete="off">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="key-input-cerebras">Cerebras API Key</label>
-                                            <input id="key-input-cerebras" type="password" placeholder="csk-..." autocomplete="off">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="key-input-composio">Composio API Key</label>
-                                            <input id="key-input-composio" type="password" placeholder="sk_comp_..." autocomplete="off">
-                                        </div>
-                                    </div>
-
-                                    <div class="form-actions">
-                                        <button id="btn-save-keys" class="keys-save-btn" type="submit">Save Configuration</button>
-                                        <span id="keys-save-status" class="save-status-text"></span>
-                                    </div>
-                                </form>
-                            </div>
+                </header>
+                <form id="keys-manager-form">
+                    <div class="keys-grid">
+                        <label class="provider-field" for="key-input-groq">
+                            <span class="provider-label"><span class="tile-icon amber"><svg class="icon" aria-hidden="true"><use href="icons.svg#bolt"></use></svg></span>Groq</span>
+                            <input id="key-input-groq" type="password" placeholder="gsk_…" autocomplete="off" spellcheck="false">
+                        </label>
+                        <label class="provider-field" for="key-input-gemini">
+                            <span class="provider-label"><span class="tile-icon iris"><svg class="icon" aria-hidden="true"><use href="icons.svg#spark"></use></svg></span>Gemini</span>
+                            <input id="key-input-gemini" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false">
+                        </label>
+                        <label class="provider-field" for="key-input-openrouter">
+                            <span class="provider-label"><span class="tile-icon sky"><svg class="icon" aria-hidden="true"><use href="icons.svg#route"></use></svg></span>OpenRouter</span>
+                            <input id="key-input-openrouter" type="password" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false">
+                        </label>
+                        <label class="provider-field" for="key-input-deepseek">
+                            <span class="provider-label"><span class="tile-icon sky"><svg class="icon" aria-hidden="true"><use href="icons.svg#orbit"></use></svg></span>DeepSeek</span>
+                            <input id="key-input-deepseek" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false">
+                        </label>
+                        <label class="provider-field" for="key-input-cerebras">
+                            <span class="provider-label"><span class="tile-icon mint"><svg class="icon" aria-hidden="true"><use href="icons.svg#chip"></use></svg></span>Cerebras</span>
+                            <input id="key-input-cerebras" type="password" placeholder="csk-…" autocomplete="off" spellcheck="false">
+                        </label>
+                        <label class="provider-field" for="key-input-composio">
+                            <span class="provider-label"><span class="tile-icon rose"><svg class="icon" aria-hidden="true"><use href="icons.svg#link"></use></svg></span>Composio</span>
+                            <input id="key-input-composio" type="password" placeholder="sk_comp_…" autocomplete="off" spellcheck="false">
+                        </label>
+                    </div>
+                    <div class="keys-footer">
+                        <p><svg class="icon" aria-hidden="true"><use href="icons.svg#lock"></use></svg> Existing keys stay hidden.</p>
+                        <div class="actions">
+                            <span id="keys-save-status" class="feedback" role="status"></span>
+                            <button id="btn-save-keys" class="button primary" type="submit"><svg class="icon" aria-hidden="true"><use href="icons.svg#save"></use></svg> Save keys</button>
                         </div>
                     </div>
-                </div>
+                </form>
             </section>
 
-            <!-- ============================================================ -->
-            <!-- SYSTEM TELEMETRY VIEW                                        -->
-            <!-- ============================================================ -->
             <section id="view-telemetry" class="main-view" aria-labelledby="telemetry-title">
-                <div class="view-header">
-                    <div class="view-header-left">
-                        <h2 id="telemetry-title" class="view-title">System Telemetry</h2>
-                        <p class="view-desc">Memory backends, cache statistics, and provider cooldown states.</p>
+                <header class="page-heading">
+                    <div>
+                        <h1 id="telemetry-title" tabindex="-1">Telemetry</h1>
+                        <p>See failed runs, cache entries, and when keys can retry.</p>
                     </div>
-                </div>
-
-                <div class="view-body">
-                    <div class="telemetry-details-layout">
-                        <!-- Memory & DB Stats -->
-                        <div class="panel-card">
-                            <div class="card-header">
-                                <h3 class="card-title">
-                                    <span class="card-title-icon">🗄️</span> Memory &amp; Storage
-                                </h3>
-                            </div>
-                            <div class="card-body metric-list">
-                                <div class="metric-item">
-                                    <span class="metric-label"><span class="metric-label-icon">📦</span> Semantic DB Path</span>
-                                    <span id="telemetry-db-path" class="metric-val">~/.config/m4stclaw/chromadb</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label"><span class="metric-label-icon">💾</span> Cache Entries</span>
-                                    <span id="telemetry-cache-size" class="metric-val">0 entries</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label"><span class="metric-label-icon">⚠️</span> Failed Runs</span>
-                                    <span id="telemetry-errors-count" class="metric-val">—</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label"><span class="metric-label-icon">🧠</span> T1 Working Memory</span>
-                                    <span class="metric-val">Active (RAM)</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label"><span class="metric-label-icon">📝</span> T2 Episodic Logs</span>
-                                    <span class="metric-val">JSON (Disk)</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label"><span class="metric-label-icon">🔮</span> T3 Semantic</span>
-                                    <span class="metric-val">ChromaDB / Fallback</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Key Cooldowns -->
-                        <div class="panel-card">
-                            <div class="card-header">
-                                <h3 class="card-title">
-                                    <span class="card-title-icon">⏱️</span> Key Cooldowns
-                                </h3>
-                            </div>
-                            <div class="card-body">
-                                <div id="cooldowns-list-container" class="cooldowns-grid">
-                                    <p class="cooldown-empty-msg">No keys are in cooldown. All providers ready.</p>
-                                </div>
-                            </div>
-                        </div>
+                    <button class="button secondary" type="button" data-refresh><svg class="icon" aria-hidden="true"><use href="icons.svg#refresh"></use></svg> Refresh</button>
+                </header>
+                <dl class="stats-grid telemetry-stats" aria-label="Diagnostic metrics">
+                    <div class="stat-card">
+                        <dt><span class="tile-icon rose"><svg class="icon" aria-hidden="true"><use href="icons.svg#alert"></use></svg></span><span>Failed runs</span></dt>
+                        <dd id="telemetry-errors-count">—</dd>
                     </div>
+                    <div class="stat-card">
+                        <dt><span class="tile-icon sky"><svg class="icon" aria-hidden="true"><use href="icons.svg#database"></use></svg></span><span>Cache entries</span></dt>
+                        <dd id="telemetry-cache-size">—</dd>
+                    </div>
+                    <div class="stat-card">
+                        <dt><span class="tile-icon amber"><svg class="icon" aria-hidden="true"><use href="icons.svg#clock"></use></svg></span><span>Active cooldowns</span></dt>
+                        <dd id="telemetry-cooldowns-count">—</dd>
+                    </div>
+                </dl>
+                <div class="overview-grid telemetry-grid">
+                    <section class="panel">
+                        <header class="panel-header">
+                            <div class="panel-heading"><svg class="icon" aria-hidden="true"><use href="icons.svg#clock"></use></svg> <h2>Key cooldowns</h2></div>
+                        </header>
+                        <div id="cooldowns-list-container" class="cooldowns-list">
+                            <p class="section-note">Unlock the dashboard to see active cooldowns.</p>
+                        </div>
+                    </section>
+                    <section class="panel">
+                        <header class="panel-header">
+                            <div class="panel-heading"><svg class="icon" aria-hidden="true"><use href="icons.svg#layers"></use></svg> <h2>Memory layers</h2></div>
+                        </header>
+                        <ul class="memory-list">
+                            <li><span class="tile-icon mint"><svg class="icon" aria-hidden="true"><use href="icons.svg#chip"></use></svg></span><div><strong>Working memory</strong><span>In-process context for the current task</span></div></li>
+                            <li><span class="tile-icon sky"><svg class="icon" aria-hidden="true"><use href="icons.svg#log"></use></svg></span><div><strong>Episodic logs</strong><span>Run records stored as local JSON</span></div></li>
+                            <li><span class="tile-icon iris"><svg class="icon" aria-hidden="true"><use href="icons.svg#database"></use></svg></span><div><strong>Semantic memory</strong><span>ChromaDB with a keyword fallback</span></div></li>
+                        </ul>
+                    </section>
                 </div>
             </section>
         </main>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>

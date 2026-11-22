@@ -5,6 +5,7 @@ Executes completion requests across chains of LLM providers with automatic key r
 and fallback upon rate-limits (HTTP 429) or failures.
 """
 
+import json
 import time
 import logging
 import httpx

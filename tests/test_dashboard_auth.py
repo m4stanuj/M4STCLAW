@@ -62,23 +62,25 @@ def test_frozen_first_run_generates_session_token_without_saving_it(tmp_path, mo
     monkeypatch.setattr(config, "CONFIG_DIR", tmp_path)
     monkeypatch.setattr(start, "check_dependencies", lambda: True)
     monkeypatch.setattr(start, "sys", SimpleNamespace(
-        platform="win32", frozen=True, stdout=SimpleNamespace(isatty=lambda: True)
+        platform="win32", frozen=True, stdout=SimpleNamespace(isatty=lambda: True), argv=["M4STCLAW.exe"]
     ))
     issued = []
-    monkeypatch.setattr(start, "run_interactive_dashboard", issued.append)
+    monkeypatch.setattr(start, "run_interactive_dashboard", lambda token, *, open_browser: issued.append((token, open_browser)))
 
     start.main()
 
-    assert len(issued) == 1 and re.fullmatch(r"[A-Za-z0-9_-]{43}", issued[0])
+    assert len(issued) == 1 and re.fullmatch(r"[A-Za-z0-9_-]{43}", issued[0][0])
+    assert issued[0][1] is True
     assert (tmp_path / ".env").read_text(encoding="utf-8").splitlines()[1] == f"{start.TOKEN_ENV}="
 
     monkeypatch.setenv(start.TOKEN_ENV, "configured-dashboard-token-0123456789")
+    start.sys.argv.append("--no-browser")
     start.main()
-    assert issued[-1] is None
+    assert issued[-1] == (None, False)
 
 
-@pytest.mark.parametrize("started", [False, True])
-def test_desktop_opens_browser_only_after_startup(started, client, monkeypatch, capsys):
+@pytest.mark.parametrize(("started", "open_browser"), [(False, True), (True, False), (True, True)])
+def test_desktop_opens_browser_only_after_startup(started, open_browser, client, monkeypatch, capsys):
     http, _ = client
     monkeypatch.delenv(start.TOKEN_ENV)
     monkeypatch.setenv("M4STCLAW_HOST", "0.0.0.0")
@@ -98,9 +100,9 @@ def test_desktop_opens_browser_only_after_startup(started, client, monkeypatch, 
     monkeypatch.setattr(uvicorn.Server, "startup", startup)
     monkeypatch.setattr(uvicorn.Server, "run", run)
     monkeypatch.setattr(start, "Thread", lambda target, daemon: SimpleNamespace(start=lambda: launches.append(target)))
-    start.run_interactive_dashboard(token)
+    start.run_interactive_dashboard(token, open_browser=open_browser)
 
-    assert launches == ([start.open_dashboard] if started else [])
+    assert launches == ([start.open_dashboard] if started and open_browser else [])
     assert (token in capsys.readouterr().out) == started
     assert http.get("/api/auth/check").status_code == 503
 

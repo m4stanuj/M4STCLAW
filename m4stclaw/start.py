@@ -93,7 +93,7 @@ def open_dashboard():
         set_dll_directory(sys._MEIPASS)
 
 
-def run_interactive_dashboard(session_token):
+def run_interactive_dashboard(session_token, *, open_browser=True):
     import uvicorn
     from m4stclaw.ui.app_server import app
 
@@ -104,7 +104,8 @@ def run_interactive_dashboard(session_token):
                 print(f"Dashboard ready at {DASHBOARD_URL}", flush=True)
                 if session_token:
                     print(f"Paste this session token into the dashboard: {session_token}", flush=True)
-                Thread(target=open_dashboard, daemon=True).start()
+                if open_browser:
+                    Thread(target=open_dashboard, daemon=True).start()
 
     config = uvicorn.Config(app, host="127.0.0.1", port=8000, log_level="warning")
     app.state.desktop_session_token = session_token
@@ -135,7 +136,7 @@ def main():
         sys.exit(1)
 
     if interactive:
-        run_interactive_dashboard(session_token)
+        run_interactive_dashboard(session_token, open_browser="--no-browser" not in sys.argv[1:])
         return
 
     # Start the FastAPI Dashboard Server via Uvicorn

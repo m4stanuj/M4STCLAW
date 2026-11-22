@@ -82,6 +82,10 @@ python scripts/smoke-windows.py build/windows/M4STCLAW.exe
 
 The preview bundles the Python runtime and dashboard assets. Double-click `build\windows\M4STCLAW.exe` to open the local dashboard in your browser. On a fresh profile, paste the session token shown in the console into the dashboard's **Dashboard token** field. That token expires when you close the EXE. If you already set a valid token, enter your existing token. Scripted launches with redirected output require a configured token. The build produces an unsigned local preview.
 
+Run the EXE with `--no-browser` to open the dashboard URL yourself while retaining the interactive token prompt.
+
+To build a per-user Windows installer, make Inno Setup 6 available and run `./scripts/build-windows-installer.ps1` after building the EXE. The setup creates a Start Menu shortcut and an entry in Windows Installed Apps. Close the running dashboard before upgrading or uninstalling. The installer preserves the existing dashboard configuration in the user profile.
+
 ### 1. Download Standalone Executable (Windows x64)
 No Node.js, Python, or Docker required!
 - Download the latest standalone release: **[m4stclaw-v5.0.0-windows-x64.zip](https://github.com/m4stanuj/M4STCLAW/releases/download/v5.0.0/m4stclaw-v5.0.0-windows-x64.zip)**

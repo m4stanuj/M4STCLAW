@@ -80,7 +80,7 @@ python -m pip install . pyinstaller==6.22.3 pywin32==312
 python scripts/smoke-windows.py build/windows/M4STCLAW.exe
 ```
 
-The preview executable bundles the Python runtime and dashboard assets. It uses the dashboard token and configuration described above. With the token set, run `build\windows\M4STCLAW.exe` and open `http://127.0.0.1:8000`. The build produces an unsigned local preview.
+The preview bundles the Python runtime and dashboard assets. Double-click `build\windows\M4STCLAW.exe` to open the local dashboard in your browser. On a fresh profile, paste the session token shown in the console into the dashboard's **Dashboard token** field. That token expires when you close the EXE. If you already set a valid token, enter your existing token. Scripted launches with redirected output require a configured token. The build produces an unsigned local preview.
 
 ### 1. Download Standalone Executable (Windows x64)
 No Node.js, Python, or Docker required!

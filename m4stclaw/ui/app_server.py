@@ -54,7 +54,7 @@ async def require_control_plane_auth(request: Request, call_next):
     """Require a bearer token for every dashboard API endpoint."""
     path = request.url.path
     if path == "/api" or path.startswith("/api/"):
-        expected = _configured_api_token()
+        expected = getattr(request.app.state, "desktop_session_token", None) or _configured_api_token()
         if not expected:
             return JSONResponse(
                 status_code=503,

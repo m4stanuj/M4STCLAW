@@ -9,6 +9,8 @@ import os
 import sys
 import logging
 import re
+import secrets
+from threading import Thread
 
 # Configure console logs
 logging.basicConfig(
@@ -17,6 +19,8 @@ logging.basicConfig(
     stream=sys.stdout
 )
 log = logging.getLogger("m4stclaw.start")
+TOKEN_ENV = "M4STCLAW_API_TOKEN"
+DASHBOARD_URL = "http://127.0.0.1:8000"
 
 # Verify local dependencies
 REQUIRED_PACKAGES = [
@@ -55,20 +59,59 @@ def setup_config_directory():
     CONFIG_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
     
     env_file = CONFIG_DIR / ".env"
-    if not env_file.exists():
+    try:
         fd = os.open(env_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(fd, "w", encoding="utf-8") as config:
-            config.write(
-                "# M4STCLAW API Configuration Secrets\n"
-                "M4STCLAW_API_TOKEN=\n"
-                "GROQ_API_KEY=\n"
-                "GEMINI_API_KEY=\n"
-                "OPENROUTER_API_KEY=\n"
-                "DEEPSEEK_API_KEY=\n"
-                "CEREBRAS_API_KEY=\n"
-                "COMPOSIO_API_KEY=\n"
-            )
-        log.info("Initialized empty configuration at %s", env_file)
+    except FileExistsError:
+        return
+    with os.fdopen(fd, "w", encoding="utf-8") as config:
+        config.write(
+            "# M4STCLAW API Configuration Secrets\n"
+            "M4STCLAW_API_TOKEN=\n"
+            "GROQ_API_KEY=\n"
+            "GEMINI_API_KEY=\n"
+            "OPENROUTER_API_KEY=\n"
+            "DEEPSEEK_API_KEY=\n"
+            "CEREBRAS_API_KEY=\n"
+            "COMPOSIO_API_KEY=\n"
+        )
+    log.info("Initialized empty configuration at %s", env_file)
+
+
+def open_dashboard():
+    from ctypes import windll
+
+    # Launch the system browser with Windows' normal DLL search path.
+    set_dll_directory = windll.kernel32.SetDllDirectoryW
+    if not set_dll_directory(None):
+        log.info("Open %s in your browser.", DASHBOARD_URL)
+        return
+    try:
+        os.startfile(DASHBOARD_URL)
+    except OSError:
+        log.info("Open %s in your browser.", DASHBOARD_URL)
+    finally:
+        set_dll_directory(sys._MEIPASS)
+
+
+def run_interactive_dashboard(session_token):
+    import uvicorn
+    from m4stclaw.ui.app_server import app
+
+    class DesktopServer(uvicorn.Server):
+        async def startup(self, sockets=None):
+            await super().startup(sockets=sockets)
+            if self.started:
+                print(f"Dashboard ready at {DASHBOARD_URL}", flush=True)
+                if session_token:
+                    print(f"Paste this session token into the dashboard: {session_token}", flush=True)
+                Thread(target=open_dashboard, daemon=True).start()
+
+    config = uvicorn.Config(app, host="127.0.0.1", port=8000, log_level="warning")
+    app.state.desktop_session_token = session_token
+    try:
+        DesktopServer(config).run()
+    finally:
+        del app.state.desktop_session_token
 
 def main():
     log.info("Initializing M4STCLAW v3.6.0...")
@@ -81,10 +124,20 @@ def main():
     # Load the locally-created configuration before checking access controls.
     from m4stclaw.core.config import CONFIG_DIR, load_dotenv_simple
     load_dotenv_simple(CONFIG_DIR / ".env")
-    if not re.fullmatch(r"[A-Za-z0-9_-]{32,128}", os.environ.get("M4STCLAW_API_TOKEN", "")):
+    desktop = sys.platform == "win32" and getattr(sys, "frozen", False)
+    interactive = desktop and sys.stdout is not None and sys.stdout.isatty()
+    token = os.environ.get(TOKEN_ENV, "")
+    session_token = None
+    if not token and interactive:
+        token = session_token = secrets.token_urlsafe(32)
+    if not re.fullmatch(r"[A-Za-z0-9_-]{32,128}", token):
         log.error("Set M4STCLAW_API_TOKEN to a high-entropy token (32–128 URL-safe characters) in %s.", CONFIG_DIR / ".env")
         sys.exit(1)
-    
+
+    if interactive:
+        run_interactive_dashboard(session_token)
+        return
+
     # Start the FastAPI Dashboard Server via Uvicorn
     import uvicorn
     
@@ -95,7 +148,7 @@ def main():
     print("="*80 + "\n")
     
     # Listen strictly on loopback address (127.0.0.1) for secure deployment, allow overrides for containerization
-    host = os.environ.get("M4STCLAW_HOST", "127.0.0.1")
+    host = "127.0.0.1" if desktop else os.environ.get("M4STCLAW_HOST", "127.0.0.1")
     uvicorn.run(
         "m4stclaw.ui.app_server:app",
         host=host,

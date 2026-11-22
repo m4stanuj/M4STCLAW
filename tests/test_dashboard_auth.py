@@ -1,9 +1,15 @@
+import asyncio
+import re
+from types import SimpleNamespace
+
 import pytest
+import uvicorn
 from fastapi.testclient import TestClient
 
 from m4stclaw.ui.app_server import app
 from m4stclaw.ui import app_server
 from m4stclaw.core import config
+from m4stclaw import start
 from m4stclaw.start import setup_config_directory
 
 
@@ -49,6 +55,54 @@ def test_setup_ignores_working_directory_template(tmp_path, monkeypatch):
     config = (config_dir / ".env").read_text(encoding="utf-8")
     assert "M4STCLAW_API_TOKEN=\n" in config
     assert "project-value" not in config
+
+
+def test_frozen_first_run_generates_session_token_without_saving_it(tmp_path, monkeypatch):
+    monkeypatch.delenv(start.TOKEN_ENV, raising=False)
+    monkeypatch.setattr(config, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(start, "check_dependencies", lambda: True)
+    monkeypatch.setattr(start, "sys", SimpleNamespace(
+        platform="win32", frozen=True, stdout=SimpleNamespace(isatty=lambda: True)
+    ))
+    issued = []
+    monkeypatch.setattr(start, "run_interactive_dashboard", issued.append)
+
+    start.main()
+
+    assert len(issued) == 1 and re.fullmatch(r"[A-Za-z0-9_-]{43}", issued[0])
+    assert (tmp_path / ".env").read_text(encoding="utf-8").splitlines()[1] == f"{start.TOKEN_ENV}="
+
+    monkeypatch.setenv(start.TOKEN_ENV, "configured-dashboard-token-0123456789")
+    start.main()
+    assert issued[-1] is None
+
+
+@pytest.mark.parametrize("started", [False, True])
+def test_desktop_opens_browser_only_after_startup(started, client, monkeypatch, capsys):
+    http, _ = client
+    monkeypatch.delenv(start.TOKEN_ENV)
+    monkeypatch.setenv("M4STCLAW_HOST", "0.0.0.0")
+    token = "desktop-only-dashboard-token-0123456789"
+    launches = []
+
+    async def startup(server, sockets=None):
+        assert server.config.host == "127.0.0.1"
+        server.started = started
+
+    def run(server):
+        assert http.get("/api/auth/check").status_code == 401
+        headers = {"Authorization": f"Bearer {token}"}
+        assert http.get("/api/auth/check", headers=headers).status_code == 200
+        asyncio.run(server.startup())
+
+    monkeypatch.setattr(uvicorn.Server, "startup", startup)
+    monkeypatch.setattr(uvicorn.Server, "run", run)
+    monkeypatch.setattr(start, "Thread", lambda target, daemon: SimpleNamespace(start=lambda: launches.append(target)))
+    start.run_interactive_dashboard(token)
+
+    assert launches == ([start.open_dashboard] if started else [])
+    assert (token in capsys.readouterr().out) == started
+    assert http.get("/api/auth/check").status_code == 503
 
 
 def test_dashboard_uses_observed_runs_and_provider_configuration(client, monkeypatch):

@@ -22,5 +22,5 @@ mcp>=0.1.0
 # Utilities
 python-dotenv>=1.0.0
 rich>=13.7.0
-psutil>=5.9.0
+psutil>=7.2.2
 aiofiles>=23.2.0
